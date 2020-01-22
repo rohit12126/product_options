@@ -86,4 +86,11 @@ class Promotion extends BaseModel
         }
         return true;
     }
+
+     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tiers(){
+        return $this->hasMany('App\Core\Models\OrderCore\Promotion\Tier','promotion_id','id');
+    }
 }
