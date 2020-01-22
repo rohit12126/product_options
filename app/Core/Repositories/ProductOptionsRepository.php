@@ -45,9 +45,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     	 
     }
 
-    public function getInvoice($invoiceId)
+    public function getInvoice($invoiceId, $withRelations = 'site')
     {
-        $invoice =  Invoice::find($invoiceId);      
+        $invoice =  Invoice::with($withRelations)->find($invoiceId);      
         return $invoice;
     }
 
@@ -57,16 +57,21 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return $invoiceItem;
     }
 
-    public function getProductData($siteId, $productId)
+    public function getProductData($dateSubmitted,$productId, $siteId)
     {
-        if($siteId =='' && $siteId == NULL){
+        if($siteId =='' && $siteId == NULL)
+        {
             $siteId = $this->getSetId();
+        }
+        if()
+        {
+
         }
     }
 
     public function getSetId()
     {
-        
+        return 2;
     }
 
 } 
