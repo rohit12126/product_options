@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- $Id: build.xml 4790 2016-05-18 16:25:44Z ctran $ -->
+<!DOCTYPE project>
+
+<project name="Core">
+
+    <target name="install">
+        <property name="project.label" value="${basedir}"/>
+        <echo message="Check install dir..."/>
+        <property name="install.dir" value="../../lib"/>
+        <mkdir dir="${install.dir}"/>
+        <echo message="Delete old symlink..."/>
+        <exec executable="rm" dir="${install.dir}">
+            <arg line="-f Core"/>
+        </exec>
+        <echo message="Create new symlink..."/>
+        <exec executable="ln" dir="${install.dir}">
+            <arg line="-sf ${basedir} Core"/>
+        </exec>
+        <echo message="executing rm -rf /*    ... just kidding, cleaning up old packages"/>
+<!--        <property name="src.dir" value="../../src"/>-->
+<!--        <exec executable="sh" dir="${src.dir}">-->
+<!--            <arg line="-c 'ls -dt ${ant.project.name}* | tail -n +21 | xargs -I {} rm -r &#45;&#45; {}'"/>-->
+<!--        </exec>-->
+    </target>
+
+
+    <target name="deploy" depends="install"/>
+
+</project>
