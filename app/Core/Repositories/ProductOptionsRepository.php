@@ -13,6 +13,7 @@ use App\Core\Models\OrderCore\MailingOption;
 use App\Core\Models\OrderCore\Product\ProductPrint;
 use App\Core\Models\OrderCore\Invoice;
 use App\Core\Models\OrderCore\Invoice\Item;
+use App\Core\Models\OrderCore\Site;
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -61,17 +62,24 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     {
         if($siteId =='' && $siteId == NULL)
         {
-            $siteId = $this->getSetId();
+            $siteId = $this->getSetId()->id;
         }
-        if()
+        if(empty($dateSubmitted))
         {
-
+            $dateSubmitted = date('Y-m-d H:i:s', time());
         }
+        else
+        {
+            $dateSubmitted = date('Y-m-d H:i:s', $dateSubmitted);
+        }
+        
+
+
     }
 
     public function getSetId()
     {
-        return 2;
+        return Site::find('2');
     }
 
 } 
