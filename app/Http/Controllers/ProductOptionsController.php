@@ -22,15 +22,15 @@ class ProductOptionsController extends Controller
      */
     public function index()
     {
+        session(['siteId'=>'2']);
         // Invoice Id passed 
-        $getInvoice = $this->productOptionsInterface->getInvoice('2041833');
-        
-        if(!empty($getInvoice))
+        $invoice = $this->productOptionsInterface->getInvoice('2041833');
+        if(!empty($invoice))
         {
-            $getInvoiceItem =  $this->productOptionsInterface->getInvoiceItem($getInvoice->id);         
-            if(!empty($getInvoiceItem))
+            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem($invoice->id);      
+            if(!empty($invoiceItem))
             {
-                
+                dd($this->productOptionsInterface->getAutoCampaignData($invoice,$invoiceItem));
             }
         }
 
@@ -151,7 +151,24 @@ class ProductOptionsController extends Controller
      */
     public function setScheduledProductionDate(Request $request)
     {
-        return response()->json();
+         if (!is_null($request->date)) {
+            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem();
+
+            $dateArray = explode('-', $request->date);
+            $scheduledDate = mktime(0, 0, 0, $dateArray[0], $dateArray[1], $dateArray[2]);
+            $invoiceItem->dateScheduled = $scheduledDate;
+            $invoiceItem->save();
+        }
+
+        $today = date('m-d-Y');
+        $dateScheduled = $invoiceItem->dateScheduled->format('m-d-Y');
+
+        if ($dateScheduled == $today && is_null($invoiceItem->dateSubmitted)) {
+            $invoiceItem->dateScheduled = null;
+            $invoiceItem->save();
+        }
+
+        return response()->json(compact('dateScheduled'));
     }
 
     /**
@@ -164,6 +181,31 @@ class ProductOptionsController extends Controller
      */
     public function getAutoCampaign(Request $request)
     {
+        $site                       = $this->getSite();
+        
+        $promotionCode              = $this->getAutoCampaignCode($site);
+        $promotion                  = $this->promotionModel
+                                            ->where('code',$promotionCode->value)
+                                            ->first();
+        
+        $invoiceItem                = $this->productOptionsInterface
+                                            ->getInvoiceItem();
+        
+        if(request()->has('repetitions'))
+        {
+            $promotion  = $this->productOptionsInterface
+                                ->setAutoCampaignData(
+                                    $invoiceItem,request('repetitions')
+                                );    
+        }
+
+        $autoCampaignData           = $this->productOptionsInterface
+                                            ->getAutoCampaignData($invoiceItem)
+        $supportPhone               = $site->getData('companyPhoneNumber')->value;
+        $selectAutoCampaignLegal    = (
+                                        $invoice->getData('acceptAutoCampaignTerms')->value =='true' ? TRUE : FALSE
+                                    );
+        
         return response()->json();
     }
 
@@ -177,7 +219,10 @@ class ProductOptionsController extends Controller
      */
     public function changeFrequency(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => $this->productOptionsInterface
+                                ->changeFrequency(request('frequency'))
+        ]);
     }
 
     /**
@@ -190,7 +235,9 @@ class ProductOptionsController extends Controller
      */
     public function getAutoCampaignMailingData(Request $request)
     {
-        return response()->json();
+        return response()->json(
+            $this->productOptionsInterface->getRepeatitionDates()
+        );
     }
 
     /**
@@ -203,7 +250,10 @@ class ProductOptionsController extends Controller
      */
     public function acceptAutoCampaignTerms(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => $this->productOptionsInterface
+                                ->setAcceptAutoCampaignTerms(request('accept'))
+        ]);
     }
 
     /**
@@ -216,7 +266,9 @@ class ProductOptionsController extends Controller
      */
     public function saveNotes(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => $this->productOptionsInterface->saveNotes(request('notes'))
+        ]);
     }
 
     /**

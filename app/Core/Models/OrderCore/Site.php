@@ -54,6 +54,16 @@ class Site extends BaseModel
     }
 
     /**
+     * Get the parentsite of site.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Site::class, 'parent_site_id');
+    }
+
+    /**
      * Get a collection of Products based on site pricing.
      *
      * @return mixed
