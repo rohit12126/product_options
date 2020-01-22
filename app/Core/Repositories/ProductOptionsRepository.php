@@ -15,13 +15,10 @@ use App\Core\Models\OrderCore\Product\ProductPrint;
 use App\Core\Models\OrderCore\Invoice;
 use App\Core\Models\OrderCore\Invoice\Item;
 use App\Core\Models\OrderCore\Site;
-<<<<<<< Updated upstream
 use App\Core\Models\OrderCore\Promotion;
 use App\Http\Helpers\HoldayHelper;
-=======
 use App\Core\Models\OrderCore\ProductPrice;
 
->>>>>>> Stashed changes
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -87,7 +84,36 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         {           
             $dateSubmitted=date('Y-m-d H:i:s',strtotime($dateSubmitted));
         }
-<<<<<<< Updated upstream
+        $product = $this->productModel->with('mailingOption','stockOption','colorOption','printOption')->find($productId);
+        
+        if(!empty($product)){
+
+            $productPrice = ProductPrice::select('product_id')
+            ->where('site_id',$siteId)
+            ->where('date_start','<=',$dateSubmitted)
+            ->where(function($q) use($dateSubmitted){
+                $q->where('date_end','>',$dateSubmitted)
+                  ->orWhere('date_end', NUll);
+            })            
+            ->get();
+           
+            $stockOptions = $this->productModel->where([
+                'product_print_id'=>$product->product_print_id,
+                'mailing_option_id'=>$product->mailing_option_id,             
+                'color_option_id'=>$product->color_option_id,
+                'print_option_id'=>$product->print_option_id,
+                'finish_option_id'=>$product->finish_option_id
+            ])
+            ->whereIn('id',$productPrice)
+            ->get();
+          
+            if(!empty($stockOptions))
+            {
+                return $stockOptions;
+            }
+            
+        }
+       
     }
 
     public function getSite()
@@ -186,43 +212,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true;
     }
 
-    public function getAutoCampaignData($invoiceItem)
-=======
-     
-        $product = $this->productModel->with('mailingOption','stockOption','colorOption','printOption')->find($productId);
-        
-        if(!empty($product)){
-
-            $productPrice = ProductPrice::select('product_id')
-            ->where('site_id',$siteId)
-            ->where('date_start','<=',$dateSubmitted)
-            ->where(function($q) use($dateSubmitted){
-                $q->where('date_end','>',$dateSubmitted)
-                  ->orWhere('date_end', NUll);
-            })            
-            ->get();
-           
-            $stockOptions = $this->productModel->where([
-                'product_print_id'=>$product->product_print_id,
-                'mailing_option_id'=>$product->mailing_option_id,             
-                'color_option_id'=>$product->color_option_id,
-                'print_option_id'=>$product->print_option_id,
-                'finish_option_id'=>$product->finish_option_id
-            ])
-            ->whereIn('id',$productPrice)
-            ->get();
-          
-            if(!empty($stockOptions))
-            {
-                return $stockOptions;
-            }
-            
-        }
-       
-    }
-
-    public function getSet()
->>>>>>> Stashed changes
+    public function getAutoCampaignDataValue($invoiceItem)
     {
         $return = collect();
         if (!$freq = $invoiceItem->getData('autoCampaignFrequency')->value) {
@@ -280,8 +270,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
 
         $mailingDates->each(function($value,$key) use(&$mailings){
-            $mailings->put($key,['mailingDate' => date('M. j', $value)];
-        })
+            $mailings->put($key,['mailingDate' => date('M. j', $value)]);
+        });
             
         return $mailings;
     }

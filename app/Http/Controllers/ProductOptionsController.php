@@ -24,22 +24,12 @@ class ProductOptionsController extends Controller
      */
     public function index()
     {
-<<<<<<< Updated upstream
         session(['siteId'=>'2']);
-        // Invoice Id passed 
-        $invoice = $this->productOptionsInterface->getInvoice('2041833');
-        if(!empty($invoice))
-        {
-            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem($invoice->id);      
-            if(!empty($invoiceItem))
-            {
-                dd($this->productOptionsInterface->getAutoCampaignData($invoice,$invoiceItem));
-=======
+
             $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
             if(!empty($invoiceItem))
             {
                 $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
->>>>>>> Stashed changes
             }
             dd($getStock);
     }
@@ -220,7 +210,7 @@ class ProductOptionsController extends Controller
         }
 
         $autoCampaignData           = $this->productOptionsInterface
-                                            ->getAutoCampaignData($invoiceItem)
+                                            ->getAutoCampaignDataValue($invoiceItem);
         $supportPhone               = $site->getData('companyPhoneNumber')->value;
         $selectAutoCampaignLegal    = (
                                         $invoice->getData('acceptAutoCampaignTerms')->value =='true' ? TRUE : FALSE
