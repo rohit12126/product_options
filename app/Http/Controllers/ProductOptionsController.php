@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Core\Interfaces\ProductOptionsInterface;
+use App\Http\Requests\StockOptionRequest;
+use App\Http\Requests\ColorOptionRequest;
 
 class ProductOptionsController extends Controller
 {
@@ -23,18 +25,13 @@ class ProductOptionsController extends Controller
     public function index()
     {
         session(['siteId'=>'2']);
-        // Invoice Id passed 
-        $invoice = $this->productOptionsInterface->getInvoice('2041833');
-        if(!empty($invoice))
-        {
-            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem($invoice->id);      
+
+            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
             if(!empty($invoiceItem))
             {
-                dd($this->productOptionsInterface->getAutoCampaignData($invoice,$invoiceItem));
+                $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
             }
-        }
-
-
+            dd($getStock);
     }
 
     /**
@@ -58,10 +55,17 @@ class ProductOptionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function setStockOption(Request $request)
-    {
-        return response()->json();
-    }
+    public function setStockOption(StockOptionRequest $request)
+    {       
+            $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');  
+
+            $stockOption = $this->productOptionsInterface->setStockOptionId($request->id,$invoiceItem);   
+            return response()->json([
+                'status' => 'success',
+                'data' => $stockOption
+            ]);
+
+      }
 
     /**
      * Set the color[Side] option for the invoice item
@@ -71,8 +75,14 @@ class ProductOptionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function setColorOption(Request $request)
+    public function setColorOption(ColorOptionRequest $request)
     {
+        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
+        $colorOption = $this->productOptionsInterface->setColorOptionId($request->id,$invoiceItem);   
+        return response()->json([
+            'status' => 'success',
+            'data' => $colorOption
+        ]);
         return response()->json();
     }
 
@@ -200,7 +210,7 @@ class ProductOptionsController extends Controller
         }
 
         $autoCampaignData           = $this->productOptionsInterface
-                                            ->getAutoCampaignData($invoiceItem)
+                                            ->getAutoCampaignDataValue($invoiceItem);
         $supportPhone               = $site->getData('companyPhoneNumber')->value;
         $selectAutoCampaignLegal    = (
                                         $invoice->getData('acceptAutoCampaignTerms')->value =='true' ? TRUE : FALSE

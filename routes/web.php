@@ -20,3 +20,5 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('productOption', 'ProductOptionsController@index')->name('productOption');
+Route::get('setStockOption','ProductOptionsController@setStockOption')->name('setStockOption');
+Route::get('setColorOption','ProductOptionsController@setColorOption')->name('setColorOption');
