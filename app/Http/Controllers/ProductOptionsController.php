@@ -2,32 +2,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Core\Interfaces\ProductInterface;
-use App\Core\Interfaces\InvoiceInterface;
+use App\Core\Interfaces\ProductOptionsInterface;
 
 class ProductOptionsController extends Controller
 {
-    /**
-     * Specify the productInterface.
-     *
-     * @var ProductInterface
-     */
-    protected $productInterface;
+    protected $productOptionsInterface;
 
-    /**
-     * Specify the invoiceInterface.
-     *
-     * @var ProductInterface
-     */
-    protected $invoiceInterface;
-
-
-
-    public function __construct(
-        InvoiceInterface $invoiceInterface
+    public function __construct(  
+        ProductOptionsInterface $productOptionsInterface
     ) 
-    {
-        $this->invoiceInterface = $invoiceInterface;
+    {      
+        $this->productOptionsInterface = $productOptionsInterface;
     }
 
     /**
@@ -37,27 +22,19 @@ class ProductOptionsController extends Controller
      */
     public function index()
     {
-        $invoiceItem = $this->invoiceInterface->getInvoiceItem();
-
-        if(!$invoiceItem){
-            return redirect();
+        // Invoice Id passed 
+        $getInvoice = $this->productOptionsInterface->getInvoice('2041833');
+        
+        if(!empty($getInvoice))
+        {
+            $getInvoiceItem =  $this->productOptionsInterface->getInvoiceItem($getInvoice->id);         
+            if(!empty($getInvoiceItem))
+            {
+                
+            }
         }
 
-        //Preselected values
-        $selected = [
-            'productPrint'  => $invoiceItem->product->productPrint
-            'finishOption'  => $invoiceItem->product->finishOption,
-            'stockOption'   => $invoiceItem->product->stockOption,
-            'mailingOption' => $invoiceItem->product->mailingOption,
-            'colorOption'   => $invoiceItem->product->colorOption,
-            'printOption'   => $invoiceItem->product->printOption,
-            'isDirectMail'  => $invoiceItem->product->isDirectMail(),
-        ];
 
-        $stockOptions = 
-
-
-        return view();
     }
 
     /**
