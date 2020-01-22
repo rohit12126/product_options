@@ -20,6 +20,8 @@ use App\Core\Repositories\SiteRepository;
 use App\Core\Interfaces\JobCalculatorInterface;
 use App\Core\Repositories\ContactRepository;
 use App\Core\Repositories\JobCalculatorRepository;
+use App\Core\Repositories\ProductOptionsRepository;
+use App\Core\Interfaces\ProductOptionsInterface;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -81,6 +83,11 @@ class InterfaceBinderServiceProvider extends ServiceProvider
         $this->app->bind(
             ContactInterface::class,
             ContactRepository::class
+        );
+
+        $this->app->bind(
+            ProductOptionsInterface::class,
+            ProductOptionsRepository::class
         );
     }
 }
