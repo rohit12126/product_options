@@ -26,3 +26,5 @@ Route::get('setColorOption','ProductOptionsController@setColorOption')->name('se
 Route::get('schedule_date','ProductOptionsController@setScheduledProductionDate');
 
 Route::get('auto_campaign','ProductOptionsController@getAutoCampaign');
+Route::get('addBinderyOption','ProductOptionsController@addBinderyOption')->name('addBinderyOption');
+Route::get('addProof','ProductOptionsController@addProof')->name('addProof');

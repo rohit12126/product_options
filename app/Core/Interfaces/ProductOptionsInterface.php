@@ -20,4 +20,10 @@ interface ProductOptionsInterface
     public function getRepeatitionDates();
     public function setAcceptAutoCampaignTerms($accept);
     public function saveNotes($notes);
+    public function getBindery($bindaryId);
+    public function addBinderyItem($bindery, $invoice);
+    public function getProof($proofId);
+    public function addProofAction($invoice, $proof);
+
+
 } 

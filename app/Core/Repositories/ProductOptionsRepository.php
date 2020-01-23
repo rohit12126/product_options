@@ -22,6 +22,9 @@ use App\Core\Models\OrderCore\ProductPrice;
 use Carbon\Carbon;
 use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Interfaces\PromotionInterface;
+use App\Core\Interfaces\invoiceInterface;
+use App\Core\Models\OrderCore\BinderyOption;
+use App\Core\Models\OrderCore\Proof;
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -32,7 +35,6 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $colorOptionModel;
     protected $printOptionModel;
     protected $promotionModel;
-
     protected $siteInterface;
     protected $invoiceInterface;
     protected $promotionInterface;
@@ -347,6 +349,96 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
         return true; 
     }
+
+    public function getProof($proofId)
+    {       
+        $proof = Proof::find($proofId);
+        return $proof;
+    }
+
+    public function addProofAction($invoice, $proof)
+    {
+        if ($this->proofItem($invoice)) {
+            $proofItem = $this->proofItem;
+            $proofItem->proofId = $proof->id;
+            $proofItem->name = $proof->description;
+            $proofItem->save();
+        } else {
+            $this->addProof($invoice, $proof);
+        }
+    }
+
+    public function proofItem($invoice)
+    {
+        $select = Item::select()->where('proof_id','>', 0)->get();
+        return $this->getDependentItem($select,$invoice);
+    }
+
+    public function getDependentItem($select, $invoiceItem)
+    {  
+        $colorOption = $invoiceItem->dependentItems($select);
+    }
+    
+
+    public function addProof($invoice, $proof)
+    {
+        $invoiceItemData = [
+            'invoice_id'                => $invoice->invoice_id,
+            'parent_invoice_item_id'    => $invoice->id,
+            'proof_id'                  => $proof->id,
+            'quantity'                  => 1,
+            'name'                      => $proof->description,
+            'date_submitted'            => $invoice->date_submitted,
+            'status'                    => $invoice->status
+        ];
+        $invoiceItem     = Item::insert($invoiceItemData); 
+
+    }
+
+    public function getBindery($bindaryId)
+    {
+        $bindary = BinderyOption::find($bindaryId);
+        return $bindary;
+    }
+
+    public function addBinderyItem($bindery, $invoice)
+    {  
+        if(!empty($bindery))
+        {
+            // currently skip parent invoice data part
+            // $categories = [];
+            // if (!is_null($dependentBinderyOption = $bindery->getProductDependent($this->getEldestItem()->product))) {
+            //     $categories[] = $dependentBinderyOption->type;
+            //     if (!is_null(
+            //         $dependentDependentBinderyOption = $dependentBinderyOption
+            //         ->getProductDependent($this->eldestItem->product)
+            //     )) {
+            //         $categories[] = $dependentDependentBinderyOption->type;
+            //     }
+            // }
+
+            // dd($this);
+            // $invoiceItemData = [
+            //     'invoice_id'                => $this->invoiceId,
+            //     'parent_invoice_item_id'    => $this->id,
+            //     'bindery_option_id'         => $binderyOption->id,
+            //     'quantity'                  => 1,
+            //     'name'                      => $binderyOption->name,
+            //     'date_submitted'            => $this->dateSubmitted,
+            //     'status'                    => $this->status
+            // ];
+            // $invoiceItem     = Item::insert($invoiceItemData); 
+            // dd($invoiceItem);
+        }
+    }
+
+    // public function getProductDependent(Product $product)
+    // {
+    //     $asssocRow = BinderyOption::where('product_id',$product->id)
+    //                 ->where('bindery_option_id',$this->id)
+    //                 ->get();
+    //     return (!is_null($assocRow)) ? $asssocRow->dependentBinderyOption : null;
+    // }
 
 
     public function buildRepetitions($invoiceId){
