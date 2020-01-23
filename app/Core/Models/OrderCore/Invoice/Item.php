@@ -15,6 +15,8 @@ use App\Core\Models\OrderCore\Discount;
 use App\Core\Models\OrderCore\Invoice\Item\Data;
 use App\Core\Models\OrderCore\DataProduct;
 use App\Core\Models\OrderCore\Invoice;
+use App\Core\Models\OrderCore\Invoice\PromotionTier;
+use App\Core\Models\OrderCore\Invoice\EddmSelection;
 use App\Core\Models\OrderCore\Invoice\Shipment;
 use App\Core\Models\OrderCore\Invoice\Item\AddressFile as AddressFileLink;
 use App\Core\Models\OrderCore\Invoice\Item\DesignFile as DesignFileLink;
@@ -123,6 +125,22 @@ class Item extends BaseModel
     public function lineItem()
     {
         return $this->hasOne(LineItem::class, 'id', 'line_item_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function promotionTier()
+    {
+        return $this->hasOne(PromotionTier::class, 'id', 'promotion_tier_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function eddmSelections()
+    {
+        return $this->hasMany(EddmSelection::class, 'id', 'eddm_selection_id');
     }
 
     /**
@@ -400,6 +418,23 @@ class Item extends BaseModel
         }
         $this->save();
         $this->_calculateTotal();
+    }
+
+    /**
+     * Set the promotion for an order.
+     * Promotion logic is handled at the persistence tier.
+     *
+     * @param Promotion $promotion
+     */
+    public function setPromotionTier($tierId)
+    {
+        if (count($existing = $this->promotionTier()) > 0) {
+            $existing->delete();
+        }
+        $this->promotionTier()->create([
+            'invoice_item_id' => $this->id,
+            'promotion_tier_id' => $tierId
+        ]);
     }
 
     /**
@@ -1266,4 +1301,6 @@ class Item extends BaseModel
     {
         return $query->whereNotIn('status', ['incomplete', 'canceled']);
     }
+
+    
 }

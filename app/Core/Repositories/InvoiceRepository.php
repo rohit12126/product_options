@@ -64,5 +64,85 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
 
         return $this->itemModel->get();
     }
+
+    public function copyInvoiceItem($invoiceItem,$values = []){
+
+        $invoiceItem->load(['product','designFiles']);
+
+        if (array_has($values,'invoice_id')) {
+            $this->itemModel->invoice_id = $values['invoice_id'];
+        } else {
+            $this->itemModel->invoice_id = $invoiceItem->invoiceId;
+        }
+
+         //check if this product is still available
+        if (!is_null($invoiceItem->product)) {
+            $productCheck = $invoiceItem->product;
+            if (count($productCheck->getPricing($invoiceItem->quantity)) > 0) { //has current pricing woohoo!
+                $this->itemModel->product_id = $invoiceItem->product_id;
+            } else { //no pricing :(
+                $replacementProduct = $productCheck->findReplacement();
+                if (!is_null($replacementProduct)) {
+                    $this->itemModel->product_id = $replacementProduct->id;
+                }
+            }
+        }
+
+        $fields = array('name','shippingName', 'shippingCompany', 'shippingLine1', 'shippingLine2', 'shippingLine3', 'shippingCity', 'shippingState', 'shippingZip', 'shippingCountry');
+        foreach ($fields as $property) {
+            if (!is_null($invoiceItem->{$property})) {
+                $this->itemModel-> {$property} = $invoiceItem->{$property};
+            }
+        }
+        if (array_has($values,'originalInvoiceItemId')) {
+            $this->itemModel->originalInvoiceItemId = $values['originalInvoiceItemId'];
+        }
+        if (array_has($values,'promotionId')) {
+            $this->itemModel->promotionId = $values['promotionId'];
+        }
+
+        if (!$this->itemModel->isDirectMail() && !$invoiceItem->isPrintAndAddress()) {
+            if (array_has($values,'quantity')) {
+                $this->itemModel->quantity = $values['quantity'];
+            } else {
+                $this->itemModel->quantity = $invoiceItem->quantity;
+            }
+        }
+
+        $this->itemModel->mailToMe = $invoiceItem->mailToMe;
+        $this->itemModel->status = 'incomplete';
+        if (array_has($values,'dateScheduled')) {
+            $this->itemModel->date_scheduled = $values['dateScheduled'];
+        }
+        if (array_has($values,'dateSubmitted')) {
+            $this->itemModel->date_submitted = $values['dateSubmitted'];
+        }
+
+        if (array_has($values,'promotionTierId')) {
+            $this->itemModel->setPromotionTier($values['promotionTierId']);
+        }
+        foreach ($this->designFiles as $designFile) {
+            $this->itemModel->addDesignFile($designFile, FALSE);
+        }
+        if ($invoiceItem->isDirectMail() || $invoiceItem->isPrintAndAddress()) {
+            foreach ($invoiceItem->addressFiles as $addressFile) {
+                // copy over address file and data product
+                $this->itemModel->addAddressFile($addressFile, FALSE);
+            }
+            foreach ($invoiceItem->getEddmSelections() as $selection) {
+                // copy over EDDM Selection and data product
+                $this->itemModel->addEddmSelection($selection, FALSE);
+            }
+        }
+
+        // copy over bindery options and its dependents
+        /*foreach ($this->children as $child) {
+            if ($child->binderyOptionId) {
+                $invoiceItem->addBinderyItem($child->binderyOption);
+            }
+        }*/
+        $item = $this->itemModel->save();
+        return $item;
+    }
     
 }
