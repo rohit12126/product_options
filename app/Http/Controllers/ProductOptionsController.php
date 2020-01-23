@@ -39,15 +39,13 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        
-
-            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
-            if(!empty($invoiceItem))
-            {
-                $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
-            }
-            dd($getStock);
+    {        
+        $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
+        if(!empty($invoiceItem))
+        {
+            $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
+        }
+          
     }
 
     /**
@@ -81,7 +79,7 @@ class ProductOptionsController extends Controller
                 'data' => $stockOption
             ]);
 
-      }
+    }
 
     /**
      * Set the color[Side] option for the invoice item
@@ -99,7 +97,6 @@ class ProductOptionsController extends Controller
             'status' => 'success',
             'data' => $colorOption
         ]);
-        return response()->json();
     }
 
     /**
@@ -145,12 +142,15 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function addProof(Request $request)
-    {
-        $invoice = $this->productOptionsInterface->getInvoice();
+    {       
+        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
         $proof = $this->productOptionsInterface->getProof('1');
        
-        $proofOption = $this->productOptionsInterface->addProofAction($invoice, $proof);
-        return response()->json();
+        $proofOption = $this->productOptionsInterface->addProofAction($invoiceItem, $proof);
+        return response()->json([
+            'status' => 'success',
+            'data' => $proofOption
+        ]);
     }
 
     /**
@@ -163,6 +163,8 @@ class ProductOptionsController extends Controller
      */
     public function setFaxedPhoneNumber(Request $request)
     {
+        $number = "123456875";
+        
         return response()->json();
     }
 

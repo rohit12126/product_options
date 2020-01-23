@@ -198,6 +198,14 @@ class Item extends BaseModel
         return $this->dependentItems()->dataProducts();
     }
 
+     /**
+     * @return mixed
+     */
+    public function proofItem()
+    {
+        return $this->hasOne(Item::class, 'parent_invoice_item_id', 'id')->where('proof_id','>','0');
+    }
+
     /**
      * @param $query
      */

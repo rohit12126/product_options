@@ -23,7 +23,7 @@ interface ProductOptionsInterface
     public function getBindery($bindaryId);
     public function addBinderyItem($bindery, $invoice);
     public function getProof($proofId);
-    public function addProofAction($invoice, $proof);
+    public function addProofAction($invoiceItem, $proofOption);
 
 
 } 
