@@ -10,6 +10,7 @@ use App\Http\Requests\StockOptionRequest;
 use App\Http\Requests\ColorOptionRequest;
 use App\Http\Requests\ProductOption\ScheduleDateRequest;
 
+
 class ProductOptionsController extends Controller
 {
     protected $productOptionsInterface;
@@ -111,6 +112,14 @@ class ProductOptionsController extends Controller
      */
     public function addBinderyOption(Request $request)
     {
+        $invoice = $this->productOptionsInterface->getInvoice();
+        
+        $bindery =  $this->productOptionsInterface->getBindery('1'); 
+        if(!empty($bindery))
+        {           
+            $binderyoption =  $this->productOptionsInterface->addBinderyItem($bindery, $invoice);
+        }
+
         return response()->json();
     }
 
@@ -137,6 +146,10 @@ class ProductOptionsController extends Controller
      */
     public function addProof(Request $request)
     {
+        $invoice = $this->productOptionsInterface->getInvoice();
+        $proof = $this->productOptionsInterface->getProof('1');
+       
+        $proofOption = $this->productOptionsInterface->addProofAction($invoice, $proof);
         return response()->json();
     }
 
