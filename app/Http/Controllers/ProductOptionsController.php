@@ -79,7 +79,7 @@ class ProductOptionsController extends Controller
                 'data' => $stockOption
             ]);
 
-      }
+    }
 
     /**
      * Set the color[Side] option for the invoice item
@@ -97,7 +97,6 @@ class ProductOptionsController extends Controller
             'status' => 'success',
             'data' => $colorOption
         ]);
-        return response()->json();
     }
 
     /**
@@ -143,13 +142,15 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function addProof(Request $request)
-    {
-        $invoice = $this->productOptionsInterface->getInvoice();
+    {       
         $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
         $proof = $this->productOptionsInterface->getProof('1');
        
         $proofOption = $this->productOptionsInterface->addProofAction($invoiceItem, $proof);
-        return response()->json();
+        return response()->json([
+            'status' => 'success',
+            'data' => $proofOption
+        ]);
     }
 
     /**
@@ -162,6 +163,8 @@ class ProductOptionsController extends Controller
      */
     public function setFaxedPhoneNumber(Request $request)
     {
+        $number = "123456875";
+        
         return response()->json();
     }
 

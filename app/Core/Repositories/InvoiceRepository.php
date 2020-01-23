@@ -144,5 +144,18 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
         $item = $this->itemModel->save();
         return $item;
     }
+
+    public function saveProofItem($invoiceItem,$proof){
+        
+        $this->itemModel->invoice_id                = $invoiceItem->invoice_id;
+        $this->itemModel->parent_invoice_item_id    = $invoiceItem->id;
+        $this->itemModel->proof_id                  = $proof->id;
+        $this->itemModel->quantity                  = 1;
+        $this->itemModel->name                      = $proof->description;
+        $this->itemModel->date_submitted            = $invoiceItem->date_submitted;
+        $this->itemModel->status                    = $invoiceItem->status;
+        $this->itemModel->save();
+        return $this->itemModel->id;
+    }
     
 }
