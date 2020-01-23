@@ -20,7 +20,8 @@ use App\Core\Models\OrderCore\Promotion\Tier;
 use App\Http\Helpers\HoldayHelper;
 use App\Core\Models\OrderCore\ProductPrice;
 use Carbon\Carbon;
-use App\Core\Interfaces\invoiceInterface;
+use App\Core\Interfaces\InvoiceInterface;
+use App\Core\Interfaces\PromotionInterface;
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -461,23 +462,23 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                         'promotionId' => $campaignPromo->id,
                         'promotionTierId' => $tier->id
                     );
-                    $repItem = $invoiceItem->copy($copyVars);
+                    $repItem = $this->invoiceInterface->copyInvoiceItem($copyVars);
 
                     // copy over cass options
-                    $repItem->setDataValue('cassSelection', $this->getDataValue('cassSelection'));
+                    $repItem->setDataValue('cassSelection', $invoiceItem->getData('cassSelection')->value);
                     $repItem->setDataValue(
-                        'cassAcceptedVariance', $this->getDataValue('cassAcceptedVariance')
+                        'cassAcceptedVariance', $invoiceItem->getData('cassAcceptedVariance')->value
                     );
-                    $repItem->setDataValue('cassKeepDuplicates', $this->getDataValue('cassKeepDuplicates'));
+                    $repItem->setDataValue('cassKeepDuplicates', $invoiceItem->getData('cassKeepDuplicates')->value);
                     $repItem->setDataValue(
-                        'cassSpecialInstructions', $this->getDataValue('cassSpecialInstructions')
+                        'cassSpecialInstructions', $invoiceItem->getData('cassSpecialInstructions')->value
                     );
                     $repItem->setDataValue(
-                        'cassAutoFillPreference', $this->getDataValue('cassAutoFillPreference')
+                        'cassAutoFillPreference', $this->getData('cassAutoFillPreference')->value
                     );
 
                     //copy over generic addressee
-                    $repItem->setDataValue('genericAddresseeId', $this->getDataValue('genericAddresseeId'));
+                    $repItem->setDataValue('genericAddresseeId', $this->getData('genericAddresseeId')->value);
 
                 }
             }
