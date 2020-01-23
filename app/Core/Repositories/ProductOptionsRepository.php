@@ -22,7 +22,6 @@ use App\Core\Models\OrderCore\ProductPrice;
 use Carbon\Carbon;
 use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Interfaces\PromotionInterface;
-use App\Core\Interfaces\invoiceInterface;
 use App\Core\Models\OrderCore\BinderyOption;
 use App\Core\Models\OrderCore\Proof;
 
