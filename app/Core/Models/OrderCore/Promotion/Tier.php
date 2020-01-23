@@ -8,6 +8,8 @@
 
 namespace App\Core\Models\OrderCore;
 
+use App\Core\Models\BaseModel;
+
 class Tier extends BaseModel
 {
 	/**
