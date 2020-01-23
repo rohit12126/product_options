@@ -1075,6 +1075,17 @@ class Item extends BaseModel
     }
 
     /**
+     * @return boolean
+     */
+    public function isPrintAndAddress()
+    {
+        if (!is_null($this->productId)) {
+            return ($this->product->mailingOptionId == 3 && $this->product->printOptionId == 1) ? TRUE : FALSE;
+        }
+        return FALSE;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\HasMany|object|null
      */
     public function getProductPrice()

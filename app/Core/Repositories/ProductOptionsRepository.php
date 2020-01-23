@@ -16,9 +16,11 @@ use App\Core\Models\OrderCore\Invoice;
 use App\Core\Models\OrderCore\Invoice\Item;
 use App\Core\Models\OrderCore\Site;
 use App\Core\Models\OrderCore\Promotion;
+use App\Core\Models\OrderCore\Promotion\Tier;
 use App\Http\Helpers\HoldayHelper;
 use App\Core\Models\OrderCore\ProductPrice;
-
+use Carbon\Carbon;
+use App\Core\Interfaces\invoiceInterface;
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -31,6 +33,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $promotionModel;
 
     protected $siteInterface;
+    protected $invoiceInterface;
+    protected $promotionInterface;
 
     public function __construct(
     	ProductPrint $productPrintModel,
@@ -40,7 +44,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     	ColorOption $colorOptionModel,
         PrintOption $printOptionModel,
         Promotion $promotionModel,
-        SiteInterface $siteInterface
+        SiteInterface $siteInterface,
+        InvoiceInterface $invoiceInterface,
+        PromotionInterface $promotionInterface
     )
     {
         $this->productPrintModel    = $productPrintModel;
@@ -51,6 +57,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $this->printOptionModel     = $printOptionModel;
         $this->promotionModel       = $promotionModel;
         $this->siteInterface        = $siteInterface;
+        $this->invoiceInterface     = $invoiceInterface;
+        $this->promotionInterface   = $promotionInterface;
     }
 
     public function getBinderyOptions(){
@@ -121,16 +129,17 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return $this->siteInterface->getSite();
     }
 
-    public function getAutoCampaignCode(Site $site){
+    public function getAutoCampaignCode(){
+        $site = $this->getSite();
         $site->load('parent');
-         if (!is_null($code = $site->getData('autoCampaignCode')) && !empty($code)) {
+         if (!is_null($code = $site->getData('autoCampaignCode')->value) && !empty($code)) {
             return $code;
         } elseif ($site->parent_site_id != 0 && !is_null($code = $site->parent->getData
-        ('autoCampaignCode')) && !empty($code)) {
+        ('autoCampaignCode')->value) && !empty($code)) {
             return $code;
         } else {
             $site = $this->siteInterface->getDefaultSite();
-            return $site->getDataValue('autoCampaignCode');
+            return $site->getDataValue('autoCampaignCode')->value;
         }
     }
 
@@ -150,7 +159,6 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
             if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
             {
-                dd($promotion);
                 $return->put('promotion',$promotion);
 
                 $promotion->load('tiers');
@@ -212,7 +220,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true;
     }
 
-    public function getAutoCampaignDataValue($invoiceItem)
+    public function getAutoCampaignDataValue(Item $invoiceItem)
     {
         $return = collect();
         if (!$freq = $invoiceItem->getData('autoCampaignFrequency')->value) {
@@ -284,6 +292,24 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true;
     }
 
+    public function setScheduledDate($date)
+    {
+        if (!is_null($date)) {
+            $invoiceItem =  $this->getInvoiceItem();
+            $invoiceItem->date_scheduled = Carbon::parse($date);
+            $invoiceItem->save();
+        }
+
+        $today = Carbon::now()->format('m-d-Y');
+        $dateScheduled = Carbon::parse($invoiceItem->date_scheduled)->format('m-d-Y');
+        if ($invoiceItem->date_scheduled == $today && is_null($invoiceItem->date_submitted)) {
+            $invoiceItem->date_scheduled = null;
+            $invoiceItem->save();
+        }
+
+        return $dateScheduled;
+    }
+
     public function saveNotes($notes)
     {
         $invoiceItem = $this->getInvoiceItem();
@@ -321,6 +347,144 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true; 
     }
 
+
+    public function buildRepetitions($invoiceId){
+
+        $invoiceItem = $this->getInvoiceItem();
+
+        $invoiceItem->load(['product','invoice']);
+
+        // Check for inproduction or ready for production repetitions
+        $repeatedItems = $this->invoiceInterface->getInvoiceItems([
+            'invoice_id' => $invoiceId,
+            'original_invoice_item_id' => '2041833',
+            'status' => [
+                'ready for production', 'in production', 'in support'
+            ]
+        ]);
+
+        if($repeatedItems->count() > 0)
+            return ; // disallow rep changes when already in production
+
+        //remove previous repetitions
+        $previousRepetitions = $this->invoiceInterface->getInvoiceItems([
+            'invoice_id' => $invoiceId,
+            'original_invoice_item_id' => '2041833',
+            'orderBy' => 'date_scheduled'
+        ]);
+
+        $repetitionCount = $this->invoiceInterface
+                                ->getDataValue('autoCampaignRepetitions');
+
+        $mailingDateTimeStamps = $this->getRepetitionDates($repetitionCount);
+
+        if (count($previousRepetitions) > 0 && $invoiceItem->status != 'incomplete') 
+        {
+            foreach ($previousRepetitions as $repetition) {
+
+                //check if this product is still available
+                if (!is_null($invoiceItem->productId)) {
+                    $productCheck = $invoice->product;
+
+                    if (count($productCheck->getPricing($invoiceItem->quantity, $invoiceItem->date_submitted,
+                            $invoiceItem->invoice->siteId)) > 0) {
+                        //has current pricing woohoo!
+                        $repetition->productId = $this->productId;
+                    } else { //no pricing :(
+                        $replacementProduct = $productCheck->findReplacement();
+                        if (!is_null($replacementProduct)) {
+                            $repetition->productId = $replacementProduct->id;
+                        }
+                    }
+                }
+
+                $repetition->dateScheduled = array_shift($mailingDateTimeStamps);
+
+                $fields = array('name', 'shippingName', 'shippingCompany', 'shippingLine1', 'shippingLine2', 'shippingLine3', 'shippingCity', 'shippingState', 'shippingZip', 'shippingCountry');
+                foreach ($fields as $property) {
+                    if (!is_null($invoiceItem->{$property})) {
+                        $repetition->{$property} = $invoiceItem->{$property};
+                    }
+                }
+                $previousStatus = $repetition->status;
+                if (!$invoiceItem->isDirectMail() && !$invoiceItem->isPrintAndAddress()) {
+                    $repetition->quantity = $invoiceItem->quantity;
+                }
+                $repetition->mailToMe = $invoiceItem->mailToMe;
+                $repetition->removeDesignFiles();
+                foreach ($invoiceItem->designFiles as $designFile) {
+                    $repetition->addDesignFile($designFile, FALSE);
+                }
+                if ($invoiceItem->isDirectMail() || $invoiceItem->isPrintAndAddress()) {
+                    $repetition->removeAddressFiles();
+                    foreach ($invoiceItem->addressFiles as $addressFile) {
+                        // copy over address file and data product
+                        $repetition->addAddressFile($addressFile, FALSE);
+                    }
+                    $repetition->removeEddmSelections();
+                    foreach ($invoiceItem->getEddmSelections() as $selection) {
+                        // copy over EDDM Selection and data product
+                        $repetition->addEddmSelection($selection, FALSE);
+                    }
+                }
+                // copy over bindery options and its dependents
+                /*$repetition->removeBinderyItems();
+                foreach ($this->children as $child) {
+                    if ($child->binderyOptionId) {
+                        $repetition->addBinderyItem($child->binderyOption);
+                    }
+                }*/
+                $repetition->status = $previousStatus;
+            }
+        }
+        else
+        {
+            foreach ($previousRepetitions as $repetition) {
+                $repetition->delete();
+            }
+            if ($repetitionCount) {
+                $campaignPromo = $this->promotionInterface
+                                      ->getPromotionByCode(
+                                            $invoiceItem->getDataValue('autoCampaignPromo')
+                                        );
+                //add new repetitions
+                foreach ($mailingDateTimeStamps as $key => $value) {
+                    $tier = $this->promotionInterface->getPromotionTier([
+                            'promotion_id'  => $campaignPromo->id,
+                            'level'         => $key 
+                    ]);
+
+                    $copyVars = array(
+                        'dateSubmitted' => $invoiceItem->dateSubmitted,
+                        'dateScheduled' => $value,
+                        'originalInvoiceItemId' => $invoiceItem->id,
+                        'promotionId' => $campaignPromo->id,
+                        'promotionTierId' => $tier->id
+                    );
+                    $repItem = $invoiceItem->copy($copyVars);
+
+                    // copy over cass options
+                    $repItem->setDataValue('cassSelection', $this->getDataValue('cassSelection'));
+                    $repItem->setDataValue(
+                        'cassAcceptedVariance', $this->getDataValue('cassAcceptedVariance')
+                    );
+                    $repItem->setDataValue('cassKeepDuplicates', $this->getDataValue('cassKeepDuplicates'));
+                    $repItem->setDataValue(
+                        'cassSpecialInstructions', $this->getDataValue('cassSpecialInstructions')
+                    );
+                    $repItem->setDataValue(
+                        'cassAutoFillPreference', $this->getDataValue('cassAutoFillPreference')
+                    );
+
+                    //copy over generic addressee
+                    $repItem->setDataValue('genericAddresseeId', $this->getDataValue('genericAddresseeId'));
+
+                }
+            }
+        }
+
+
+    }
 
 
 } 

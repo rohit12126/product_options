@@ -35,5 +35,17 @@ class SiteRepository extends BaseRepository implements SiteInterface
     {           
         return $this->model->find(config('app.server_config.defaultSiteId'));
     }
+
+    /**
+     * Fetch current site based on config site id and get the data value of the site
+     *     
+     * @return String/Int/Boolean
+     */
+    public function getSiteDataValue($name)
+    {   
+        $site = $this->getSite();        
+        return $site->getData($name)->value;
+    }
+
     
 }

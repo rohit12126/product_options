@@ -22,6 +22,9 @@ use App\Core\Repositories\ContactRepository;
 use App\Core\Repositories\JobCalculatorRepository;
 use App\Core\Repositories\ProductOptionsRepository;
 use App\Core\Interfaces\ProductOptionsInterface;
+use App\Core\Repositories\PromotionRepository;
+use App\Core\Interfaces\PromotionInterface;
+
 
 use Illuminate\Support\ServiceProvider;
 
@@ -88,6 +91,11 @@ class InterfaceBinderServiceProvider extends ServiceProvider
         $this->app->bind(
             ProductOptionsInterface::class,
             ProductOptionsRepository::class
+        );
+
+        $this->app->bind(
+            PromotionInterface::class,
+            PromotionRepository::class
         );
     }
 }
