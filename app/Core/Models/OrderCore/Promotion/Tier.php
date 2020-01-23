@@ -6,7 +6,7 @@
  * Time: 10:35 AM
  */
 
-namespace App\Core\Models\OrderCore;
+namespace App\Core\Models\OrderCore\Promotion;
 
 use App\Core\Models\BaseModel;
 
