@@ -22,3 +22,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('productOption', 'ProductOptionsController@index')->name('productOption');
 Route::get('setStockOption','ProductOptionsController@setStockOption')->name('setStockOption');
 Route::get('setColorOption','ProductOptionsController@setColorOption')->name('setColorOption');
+
+Route::get('schedule_date','ProductOptionsController@setScheduledProductionDate');
+
+Route::get('auto_campaign','ProductOptionsController@getAutoCampaign');

@@ -3,18 +3,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Core\Interfaces\ProductOptionsInterface;
+use App\Core\Interfaces\InvoiceInterface;
+use App\Core\Interfaces\SiteInterface;
+use App\Core\Interfaces\PromotionInterface;
 use App\Http\Requests\StockOptionRequest;
 use App\Http\Requests\ColorOptionRequest;
+use App\Http\Requests\ProductOption\ScheduleDateRequest;
 
 class ProductOptionsController extends Controller
 {
     protected $productOptionsInterface;
+    protected $invoiceInterface;
+    protected $siteInterface;
+    protected $promotionInterface;
 
     public function __construct(  
-        ProductOptionsInterface $productOptionsInterface
+        ProductOptionsInterface $productOptionsInterface,
+        InvoiceInterface $invoiceInterface,
+        SiteInterface $siteInterface,
+        PromotionInterface $promotionInterface
     ) 
-    {      
-        $this->productOptionsInterface = $productOptionsInterface;
+    {    
+
+        session(['siteId'=>'2']);  
+        $this->productOptionsInterface  = $productOptionsInterface;
+        $this->invoiceInterface         = $invoiceInterface;
+        $this->siteInterface            = $siteInterface;
+        $this->promotionInterface       = $promotionInterface;
     }
 
     /**
@@ -24,7 +39,7 @@ class ProductOptionsController extends Controller
      */
     public function index()
     {
-        session(['siteId'=>'2']);
+        
 
             $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
             if(!empty($invoiceItem))
@@ -159,26 +174,12 @@ class ProductOptionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function setScheduledProductionDate(Request $request)
+    public function setScheduledProductionDate(ScheduleDateRequest $request)
     {
-         if (!is_null($request->date)) {
-            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem();
-
-            $dateArray = explode('-', $request->date);
-            $scheduledDate = mktime(0, 0, 0, $dateArray[0], $dateArray[1], $dateArray[2]);
-            $invoiceItem->dateScheduled = $scheduledDate;
-            $invoiceItem->save();
-        }
-
-        $today = date('m-d-Y');
-        $dateScheduled = $invoiceItem->dateScheduled->format('m-d-Y');
-
-        if ($dateScheduled == $today && is_null($invoiceItem->dateSubmitted)) {
-            $invoiceItem->dateScheduled = null;
-            $invoiceItem->save();
-        }
-
-        return response()->json(compact('dateScheduled'));
+        return response()->json([
+            'dateScheduled' =>  $this->productOptionsInterface
+                                    ->setScheduledDate($request->date)
+        ]);
     }
 
     /**
@@ -191,12 +192,12 @@ class ProductOptionsController extends Controller
      */
     public function getAutoCampaign(Request $request)
     {
-        $site                       = $this->getSite();
-        
-        $promotionCode              = $this->getAutoCampaignCode($site);
-        $promotion                  = $this->promotionModel
-                                            ->where('code',$promotionCode->value)
-                                            ->first();
+           
+        $promotionCode              = $this->productOptionsInterface
+                                            ->getAutoCampaignCode();
+
+        $promotion                  = $this->promotionInterface
+                                            ->getPromotionByCode($promotionCode);
         
         $invoiceItem                = $this->productOptionsInterface
                                             ->getInvoiceItem();
@@ -205,17 +206,19 @@ class ProductOptionsController extends Controller
         {
             $promotion  = $this->productOptionsInterface
                                 ->setAutoCampaignData(
-                                    $invoiceItem,request('repetitions')
+                                    $invoiceItem,request('repetitions'),$promotion
                                 );    
         }
 
         $autoCampaignData           = $this->productOptionsInterface
                                             ->getAutoCampaignDataValue($invoiceItem);
-        $supportPhone               = $site->getData('companyPhoneNumber')->value;
+
+        $supportPhone               = $this->siteInterface
+                                            ->getSiteDataValue('companyPhoneNumber');
+
         $selectAutoCampaignLegal    = (
-                                        $invoice->getData('acceptAutoCampaignTerms')->value =='true' ? TRUE : FALSE
+                                        $this->invoiceInterface->getDataValue('acceptAutoCampaignTerms') =='true' ? TRUE : FALSE
                                     );
-        
         return response()->json();
     }
 
