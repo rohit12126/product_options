@@ -355,42 +355,60 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return $proof;
     }
 
-    public function addProofAction($invoice, $proof)
+    public function addProofAction($invoiceItem, $proofOption)
     {
-        if ($this->proofItem($invoice)) {
-            $proofItem = $this->proofItem;
-            $proofItem->proofId = $proof->id;
-            $proofItem->name = $proof->description;
-            $proofItem->save();
+        $invoiceItem->load('proofItem');        
+        if ($invoiceItem->proofItem) {
+            $invoiceItem->proofItem->proof_id = $invoiceItem->proofItem->proof_id;
+            $invoiceItem->proofItem->name = $invoiceItem->proofItem->name;
+            $invoiceItem->proofItem->save();
         } else {
-            $this->addProof($invoice, $proof);
+            $this->invoiceInterface->saveProofItem($invoiceItem, $proofOption);
+        }
+
+        if ($proofOption->delivery_method == 'faxed') {
+            $this->setFaxedProofPhoneNumber($invoiceItem,$this->getFaxedProofPhoneNumber($invoiceItem));
         }
     }
 
-    public function proofItem($invoice)
-    {
-        $select = Item::select()->where('proof_id','>', 0)->get();
-        return $this->getDependentItem($select,$invoice);
+    public function getFaxedProofPhoneNumber(&$invoiceItem)
+    {      
+        $faxNumber = '';
+        if ($invoiceItem->proofItem)
+        {
+            $faxNumber = $invoiceItem->proofItem->getData('faxedProofPhoneNumber')->value;
+        }
+        if (empty($faxNumber))
+        {
+            $invoiceItem->load('invoice.user.account');
+            // Check for fax numbers and use the first one, if available
+            $phone = $invoiceItem->invoice->user->account->getPhoneByType('fax');
+            if ($phone) {
+                $faxNumber = $phone->number;
+            }
+        }
+        return $faxNumber;
     }
-
-    public function getDependentItem($select, $invoiceItem)
-    {  
-        $colorOption = $invoiceItem->dependentItems($select);
-    }
-    
-
-    public function addProof($invoice, $proof)
+ 
+    public function setFaxedProofPhoneNumber($invoiceItem, $number)
     {
-        $invoiceItemData = [
-            'invoice_id'                => $invoice->invoice_id,
-            'parent_invoice_item_id'    => $invoice->id,
-            'proof_id'                  => $proof->id,
-            'quantity'                  => 1,
-            'name'                      => $proof->description,
-            'date_submitted'            => $invoice->date_submitted,
-            'status'                    => $invoice->status
-        ];
-        $invoiceItem     = Item::insert($invoiceItemData); 
+        $pattern = '/^[2-9][0-8]\d[2-9]\d{6}$/';
+        if (!preg_match($pattern, $number)) {
+            return false;
+        }
+        if ($invoiceItem->proofItem)
+        {
+            $invoiceItem->proofItem->setDataValue('faxedProofPhoneNumber',$number);
+        }
+               
+         if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
+             $phone = new Phone;
+             $phone->accountId = $invoiceItem->invoice->user->account->id;
+         }
+         $phone->number = $number;
+         $phone->type = 'fax';
+         $phone->description = 'Faxed Proof Number';
+         return $phone->save();        
 
     }
 
@@ -404,41 +422,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     {  
         if(!empty($bindery))
         {
-            // currently skip parent invoice data part
-            // $categories = [];
-            // if (!is_null($dependentBinderyOption = $bindery->getProductDependent($this->getEldestItem()->product))) {
-            //     $categories[] = $dependentBinderyOption->type;
-            //     if (!is_null(
-            //         $dependentDependentBinderyOption = $dependentBinderyOption
-            //         ->getProductDependent($this->eldestItem->product)
-            //     )) {
-            //         $categories[] = $dependentDependentBinderyOption->type;
-            //     }
-            // }
-
-            // dd($this);
-            // $invoiceItemData = [
-            //     'invoice_id'                => $this->invoiceId,
-            //     'parent_invoice_item_id'    => $this->id,
-            //     'bindery_option_id'         => $binderyOption->id,
-            //     'quantity'                  => 1,
-            //     'name'                      => $binderyOption->name,
-            //     'date_submitted'            => $this->dateSubmitted,
-            //     'status'                    => $this->status
-            // ];
-            // $invoiceItem     = Item::insert($invoiceItemData); 
-            // dd($invoiceItem);
+           
         }
     }
-
-    // public function getProductDependent(Product $product)
-    // {
-    //     $asssocRow = BinderyOption::where('product_id',$product->id)
-    //                 ->where('bindery_option_id',$this->id)
-    //                 ->get();
-    //     return (!is_null($assocRow)) ? $asssocRow->dependentBinderyOption : null;
-    // }
-
 
     public function buildRepetitions($invoiceId){
 

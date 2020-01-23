@@ -39,15 +39,13 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        
-
-            $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
-            if(!empty($invoiceItem))
-            {
-                $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
-            }
-            dd($getStock);
+    {        
+        $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
+        if(!empty($invoiceItem))
+        {
+            $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
+        }
+          
     }
 
     /**
@@ -147,9 +145,10 @@ class ProductOptionsController extends Controller
     public function addProof(Request $request)
     {
         $invoice = $this->productOptionsInterface->getInvoice();
+        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
         $proof = $this->productOptionsInterface->getProof('1');
        
-        $proofOption = $this->productOptionsInterface->addProofAction($invoice, $proof);
+        $proofOption = $this->productOptionsInterface->addProofAction($invoiceItem, $proof);
         return response()->json();
     }
 

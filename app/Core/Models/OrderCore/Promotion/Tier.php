@@ -25,9 +25,4 @@ class Tier extends BaseModel
      * @var string
      */
     protected $table = 'promotion_tier';
-
-
-    public $errors = [];
-
-    
 }
