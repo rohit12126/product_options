@@ -100,7 +100,7 @@ class ProductOptionsController extends Controller
     {       
         return response()->json([
             'status' => 'success',
-            'data' => $this->addBinderyItem($request->id)
+            'data' => $this->productOptionsInterface->addBinderyItem($request->id)
         ]);
     }
 

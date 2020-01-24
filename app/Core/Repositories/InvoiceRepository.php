@@ -20,9 +20,9 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
         $this->itemModel = $itemModel;
     }
 
-    public function getInvoice($id = '2041833')
+    public function getInvoice($id = '2041833',$relations = 'site')
     {
-    	return $this->model->with('site')->find($id);
+    	return $this->model->with($relations)->find($id);
     }
 
     public function getDataValue($name)
@@ -147,15 +147,17 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
 
     public function saveProofItem($invoiceItem,$proof)
     {        
-        $this->itemModel->invoice_id                = $invoiceItem->invoice_id;
-        $this->itemModel->parent_invoice_item_id    = $invoiceItem->id;
-        $this->itemModel->proof_id                  = $proof->id;
-        $this->itemModel->quantity                  = 1;
-        $this->itemModel->name                      = $proof->description;
-        $this->itemModel->date_submitted            = $invoiceItem->date_submitted;
-        $this->itemModel->status                    = $invoiceItem->status;
-        $this->itemModel->save();
-        return $this->itemModel->id;
+        $item = $this->itemModel->Create([
+             'invoice_id' => $invoiceItem->invoice_id,
+             'parent_invoice_item_id' => $invoiceItem->id,
+             'proof_id' => $proof->id,
+             'quantity' =>  1,
+             'name'     => $proof->description,
+             'date_submitted'   => $invoiceItem->date_submitted,
+             'status'   => $invoiceItem->status
+            ]);
+        return $item->id;
+        
     }
       
 }
