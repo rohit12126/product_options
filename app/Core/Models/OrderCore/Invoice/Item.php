@@ -214,6 +214,10 @@ class Item extends BaseModel
         return $this->hasMany(Item::class, 'parent_invoice_item_id', 'id')->where('bindery_option_id','>','0');
     }
 
+    public function binderyOption(){
+        return $this->hasOne('App\Core\Models\OrderCore\BinderyOption','bindery_option_id');
+    }
+
     /**
      * @param $query
      */
