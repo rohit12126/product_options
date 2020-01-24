@@ -24,6 +24,7 @@ use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Interfaces\PromotionInterface;
 use App\Core\Models\OrderCore\BinderyOption;
 use App\Core\Models\OrderCore\Proof;
+use App\Core\Models\OrderCore\Phone;
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -37,6 +38,13 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $siteInterface;
     protected $invoiceInterface;
     protected $promotionInterface;
+    protected $productPrice;
+    protected $proof;
+    protected $binderyOption;
+    protected $phone;
+    protected $invoice;
+    protected $item;
+
 
     public function __construct(
     	ProductPrint $productPrintModel,
@@ -48,7 +56,13 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         Promotion $promotionModel,
         SiteInterface $siteInterface,
         InvoiceInterface $invoiceInterface,
-        PromotionInterface $promotionInterface
+        PromotionInterface $promotionInterface,
+        ProductPrice $productPrice,
+        Proof $proof,
+        BinderyOption $binderyOption,
+        Phone $phone,
+        Invoice $invoice,
+        Item $item
     )
     {
         $this->productPrintModel    = $productPrintModel;
@@ -61,6 +75,12 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $this->siteInterface        = $siteInterface;
         $this->invoiceInterface     = $invoiceInterface;
         $this->promotionInterface   = $promotionInterface;
+        $this->productPrice         = $productPrice;
+        $this->proof                = $proof;
+        $this->binderyOption        = $binderyOption;
+        $this->phone                = $phone;
+        $this->invoice              = $invoice;
+        $this->item                 = $item;
     }
 
     public function getBinderyOptions(){
@@ -69,37 +89,33 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function getInvoice($withRelations = 'site')
     {
-        $invoice =  Invoice::with($withRelations)->find('2041833');      
-        return $invoice;
+        return $this->invoice->with($withRelations)->find('2041833');              
     }
 
     public function getInvoiceItem($itemId = '2041833')
     {
-        $invoiceItem =  Item::where('invoice_id',$itemId)->where('product_id','<>',NULL)->first();
-        return $invoiceItem;
+        return $this->item->where('invoice_id',$itemId)->where('product_id','<>',NULL)->first();        
     }
 
-    public function getStockOption($dateSubmitted,$productId, $siteId)
+    public function getStockOption()
     {
-        if($siteId =='' && $siteId == NULL)
-        {
-            $siteId = $this->getSet()->id;
-        }
+        $invoice = $this->getInvoice();
+        $invoiceItem =  $this->getInvoiceItem('2041833'); 
         
-        if(empty($dateSubmitted))
+        if(empty($invoiceItem->date_submitted))
         {
             $dateSubmitted = date('Y-m-d H:i:s', strtotime());
         }
         else
         {           
-            $dateSubmitted=date('Y-m-d H:i:s',strtotime($dateSubmitted));
+            $dateSubmitted=date('Y-m-d H:i:s',strtotime($date_submitted));
         }
-        $product = $this->productModel->with('mailingOption','stockOption','colorOption','printOption')->find($productId);
+        $product = $this->productModel->with('mailingOption','stockOption','colorOption','printOption')->find($invoiceItem->product_id);
         
         if(!empty($product)){
 
-            $productPrice = ProductPrice::select('product_id')
-            ->where('site_id',$siteId)
+            $productPrice = $this->productPrice->select('product_id')
+            ->where('site_id',$invoice->site_id)
             ->where('date_start','<=',$dateSubmitted)
             ->where(function($q) use($dateSubmitted){
                 $q->where('date_end','>',$dateSubmitted)
@@ -331,42 +347,45 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true;
     }
 
-    public function setStockOptionId($stockOptionId,$invoiceItem)
-    {     
+    public function setStockOptionId($stockOptionId)
+    {    
+        $invoiceItem = $this->getInvoiceItem('2041833');     
         if(!empty($stockOptionId) && !empty($invoiceItem))
         {
            $stockOption = $invoiceItem->setStockOptionId($stockOptionId);
-        }
-        return true;  
+           return true;  
+        }       
     }
 
-    public function setColorOptionId($colorId,$invoiceItem)
+    public function setColorOptionId($colorId)
     {
+        $invoiceItem = $this->getInvoiceItem('2041833');
         if(!empty($colorId) && !empty($invoiceItem))
         {
            $colorOption = $invoiceItem->setStockOptionId($colorId);
-        }
-        return true; 
+           return true; 
+        }        
     }
 
     public function getProof($proofId)
     {       
-        $proof = Proof::find($proofId);
-        return $proof;
+        return  $this->proof->find($proofId);       
     }
 
-    public function addProofAction($invoiceItem, $proofOption)
+    public function addProofAction($proofId)
     {
+        $invoiceItem = $this->getInvoiceItem('2041833');
+        $proof = $this->getProof('1');
         $invoiceItem->load('proofItem');        
         if ($invoiceItem->proofItem) {
             $invoiceItem->proofItem->proof_id = $invoiceItem->proofItem->proof_id;
             $invoiceItem->proofItem->name = $invoiceItem->proofItem->name;
             $invoiceItem->proofItem->save();
         } else {
-            $this->invoiceInterface->saveProofItem($invoiceItem, $proofOption);
+            $this->invoiceInterface->saveProofItem($invoiceItem, $proof);
         }
 
-        if ($proofOption->delivery_method == 'faxed') {
+        if ($proof->delivery_method == 'faxed') {
             $this->setFaxedProofPhoneNumber($invoiceItem,$this->getFaxedProofPhoneNumber($invoiceItem));
         }
     }
@@ -401,8 +420,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             $invoiceItem->proofItem->setDataValue('faxedProofPhoneNumber',$number);
         }
                
-         if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
-             $phone = new Phone;
+        if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
+             $phone = $this->phone;
              $phone->accountId = $invoiceItem->invoice->user->account->id;
          }
          $phone->number = $number;
@@ -414,12 +433,14 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function getBindery($bindaryId)
     {
-        $bindary = BinderyOption::find($bindaryId);
-        return $bindary;
+        return $this->binderyOption->find($bindaryId);        
     }
 
-    public function addBinderyItem($bindery, $invoice)
+    public function addBinderyItem($bindery)
     {  
+        $invoice = $this->getInvoice();  
+        $bindery =  $this->getBindery('1'); 
+
         if(!empty($bindery))
         {
            
@@ -560,9 +581,42 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                 }
             }
         }
+    }
 
+    public function updateFaxedPhoneNumber($number = '123456875' )
+    {
+        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');       
+        $invoiceItem->load('proofItem'); 
+        $pattern = '/^[2-9][0-8]\d[2-9]\d{6}$/';
+        if (!preg_match($pattern, $number)) {
+            return false;
+        }
+        if ($invoiceItem->proofItem)
+        {
+            $invoiceItem->proofItem->setDataValue('faxedProofPhoneNumber',$number);
+        }
+               
+        if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
+             $phone = $this->phone;
+             $phone->accountId = $invoiceItem->invoice->user->account->id;
+         }
+         $phone->number = $number;
+         $phone->type = 'fax';
+         $phone->description = 'Faxed Proof Number';
+         return $phone->save();
 
     }
 
+    public function removeInvoiceProof($invoiceItem,$proofId)
+    {
+        $invoiceItem = $this->getInvoiceItem('2041833');
+        $proof = $this->productOptionsInterface->getProof('1'); 
+        $invoiceItem->load('proofItem');
+        if($invoiceItem->proofItem)
+        {
+           return $this->invoiceItem->proofItem->removeProof($invoiceItem, $proof);
+        }
+    }
+   
 
 } 
