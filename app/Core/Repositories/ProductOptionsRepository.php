@@ -21,7 +21,6 @@ use App\Http\Helpers\HoldayHelper;
 use App\Core\Models\OrderCore\ProductPrice;
 use Carbon\Carbon;
 use App\Core\Interfaces\InvoiceInterface;
-use App\Core\Interfaces\PromotionInterface;
 use App\Core\Models\OrderCore\BinderyOption;
 use App\Core\Models\OrderCore\Proof;
 use App\Core\Models\OrderCore\Phone;
@@ -37,7 +36,6 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $promotionModel;
     protected $siteInterface;
     protected $invoiceInterface;
-    protected $promotionInterface;
     protected $productPrice;
     protected $proof;
     protected $binderyOption;
@@ -56,13 +54,12 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         Promotion $promotionModel,
         SiteInterface $siteInterface,
         InvoiceInterface $invoiceInterface,
-        PromotionInterface $promotionInterface,
         ProductPrice $productPrice,
         Proof $proof,
         BinderyOption $binderyOption,
         Phone $phone,
         Invoice $invoice,
-        Item $item
+        Item $item,
         Tier $tierModel
     )
     {
@@ -75,7 +72,6 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $this->promotionModel       = $promotionModel;
         $this->siteInterface        = $siteInterface;
         $this->invoiceInterface     = $invoiceInterface;
-        $this->promotionInterface   = $promotionInterface;
         $this->productPrice         = $productPrice;
         $this->proof                = $proof;
         $this->binderyOption        = $binderyOption;
@@ -245,10 +241,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         ] ;
     }
 
-    public function getPromotionData(){
-        $promotionCode              = $this->getAutoCampaignCode();
+    public function getPromotionData($promotionCode = ''){
+        if(empty($promotionCode))
+            $promotionCode              = $this->getAutoCampaignCode();
         $promotion                  = $this->getPromotionByCode($promotionCode);
-
         return compact('promotionCode','promotion');
     }
 
@@ -554,10 +550,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                 $repetition->delete();
             }
             if ($repetitionCount) {
-                $campaignPromo = $this->promotionInterface
-                                      ->getPromotionByCode(
+                $campaignPromo = $this->getPromotionData(
                                             $invoiceItem->getDataValue('autoCampaignPromo')
-                                        );
+                                        )['promotion'];
                 //add new repetitions
                 foreach ($mailingDateTimeStamps as $key => $value) {
                     $tier = $this->getPromotionTier([
