@@ -176,8 +176,7 @@ class ProductOptionsController extends Controller
     public function setScheduledProductionDate(ScheduleDateRequest $request)
     {
         return response()->json([
-            'dateScheduled' =>  $this->productOptionsInterface
-                                    ->setScheduledDate($request->date)
+            'dateScheduled' =>  $this->productOptionsInterface->setScheduledDate($request->date)
         ]);
     }
 
@@ -190,35 +189,8 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function getAutoCampaign(Request $request)
-    {
-           
-        $promotionCode              = $this->productOptionsInterface
-                                            ->getAutoCampaignCode();
-
-        $promotion                  = $this->promotionInterface
-                                            ->getPromotionByCode($promotionCode);
-        
-        $invoiceItem                = $this->productOptionsInterface
-                                            ->getInvoiceItem();
-        
-        if(request()->has('repetitions'))
-        {
-            $promotion  = $this->productOptionsInterface
-                                ->setAutoCampaignData(
-                                    $invoiceItem,request('repetitions'),$promotion
-                                );    
-        }
-
-        $autoCampaignData           = $this->productOptionsInterface
-                                            ->getAutoCampaignDataValue($invoiceItem);
-
-        $supportPhone               = $this->siteInterface
-                                            ->getSiteDataValue('companyPhoneNumber');
-
-        $selectAutoCampaignLegal    = (
-                                        $this->invoiceInterface->getDataValue('acceptAutoCampaignTerms') =='true' ? TRUE : FALSE
-                                    );
-        return response()->json();
+    {  
+        return response()->json( $this->productOptionsInterface->setAutoCampaignData(request('repetitions')));
     }
 
     /**
