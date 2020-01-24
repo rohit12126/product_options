@@ -39,13 +39,8 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {        
-        $invoiceItem =  $this->productOptionsInterface->getInvoiceItem('2041833');         
-        if(!empty($invoiceItem))
-        {
-            $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
-        }
-          
+    {   
+        $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
     }
 
     /**
@@ -70,15 +65,11 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function setStockOption(StockOptionRequest $request)
-    {       
-            $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');  
-
-            $stockOption = $this->productOptionsInterface->setStockOptionId($request->id,$invoiceItem);   
-            return response()->json([
-                'status' => 'success',
-                'data' => $stockOption
-            ]);
-
+    {            
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->setStockOptionId($request->id)
+        ]);
     }
 
     /**
@@ -91,11 +82,9 @@ class ProductOptionsController extends Controller
      */
     public function setColorOption(ColorOptionRequest $request)
     {
-        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
-        $colorOption = $this->productOptionsInterface->setColorOptionId($request->id,$invoiceItem);   
         return response()->json([
             'status' => 'success',
-            'data' => $colorOption
+            'data' => $this->productOptionsInterface->setColorOptionId($request->id)
         ]);
     }
 
@@ -108,16 +97,11 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function addBinderyOption(Request $request)
-    {
-        $invoice = $this->productOptionsInterface->getInvoice();
-        
-        $bindery =  $this->productOptionsInterface->getBindery('1'); 
-        if(!empty($bindery))
-        {           
-            $binderyoption =  $this->productOptionsInterface->addBinderyItem($bindery, $invoice);
-        }
-
-        return response()->json();
+    {       
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->addBinderyItem($request->id)
+        ]);
     }
 
     /**
@@ -142,14 +126,10 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function addProof(Request $request)
-    {       
-        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');
-        $proof = $this->productOptionsInterface->getProof('1');
-       
-        $proofOption = $this->productOptionsInterface->addProofAction($invoiceItem, $proof);
+    {           
         return response()->json([
             'status' => 'success',
-            'data' => $proofOption
+            'data' => $this->productOptionsInterface->addProofAction($request->id)
         ]);
     }
 
@@ -162,10 +142,11 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function setFaxedPhoneNumber(Request $request)
-    {
-        $number = "123456875";
-        
-        return response()->json();
+    {       
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->updateFaxedPhoneNumber($request->number)
+        ]);
     }
 
     /**
@@ -178,7 +159,10 @@ class ProductOptionsController extends Controller
      */
     public function removeProof(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->removeInvoiceProof($request->id)
+        ]);
     }  
 
     /**

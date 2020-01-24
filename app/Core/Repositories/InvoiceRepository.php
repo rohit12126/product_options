@@ -145,8 +145,8 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
         return $item;
     }
 
-    public function saveProofItem($invoiceItem,$proof){
-        
+    public function saveProofItem($invoiceItem,$proof)
+    {        
         $this->itemModel->invoice_id                = $invoiceItem->invoice_id;
         $this->itemModel->parent_invoice_item_id    = $invoiceItem->id;
         $this->itemModel->proof_id                  = $proof->id;
@@ -157,5 +157,5 @@ class InvoiceRepository extends BaseRepository implements InvoiceInterface
         $this->itemModel->save();
         return $this->itemModel->id;
     }
-    
+      
 }

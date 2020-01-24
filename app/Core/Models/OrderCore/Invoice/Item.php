@@ -1309,6 +1309,14 @@ class Item extends BaseModel
     {
         return $query->whereNotIn('status', ['incomplete', 'canceled']);
     }
-
     
+
+    // Remove the proof option setting for the invoice item
+     public function removeProof($invoiceItem, $proofOption)
+     {
+        //  while ($this->proofItem) {
+        //      $this->proofItem->delete();
+        //  }
+ 
+     }
 }

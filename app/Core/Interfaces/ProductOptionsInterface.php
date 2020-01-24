@@ -9,9 +9,9 @@ interface ProductOptionsInterface
     public function getBinderyOptions();
     public function getInvoice($withRelations);
     public function getInvoiceItem($itemId);
-    public function getStockOption($dateSubmitted,$productId, $siteId);
-    public function setStockOptionId($stockOptionId,$invoiceItem);
-    public function setColorOptionId($colorId,$invoiceItem);
+    public function getStockOption();
+    public function setStockOptionId($stockOptionId);
+    public function setColorOptionId($colorId);
     public function setScheduledDate($date);
     public function getAutoCampaignCode();
     public function setAutoCampaignData(Item $invoiceItem,$repetitions,$promotion);
@@ -21,9 +21,11 @@ interface ProductOptionsInterface
     public function setAcceptAutoCampaignTerms($accept);
     public function saveNotes($notes);
     public function getBindery($bindaryId);
-    public function addBinderyItem($bindery, $invoice);
+    public function addBinderyItem($bindery);
     public function getProof($proofId);
-    public function addProofAction($invoiceItem, $proofOption);
+    public function addProofAction($proofId);
+    public function updateFaxedPhoneNumber($number);
+    public function removeInvoiceProof($proofOption);
 
 
 } 
