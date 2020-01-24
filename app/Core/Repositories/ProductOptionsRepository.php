@@ -44,7 +44,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $phone;
     protected $invoice;
     protected $item;
-
+    protected $tierModel;
 
     public function __construct(
     	ProductPrint $productPrintModel,
@@ -63,6 +63,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         Phone $phone,
         Invoice $invoice,
         Item $item
+        Tier $tierModel
     )
     {
         $this->productPrintModel    = $productPrintModel;
@@ -81,6 +82,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $this->phone                = $phone;
         $this->invoice              = $invoice;
         $this->item                 = $item;
+        $this->tierModel            = $tierModel;
     }
 
     public function getBinderyOptions(){
@@ -161,35 +163,27 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
     }
 
-    public function getAutoCampaignData(Invoice $invoice,Item $invoiceItem)
+    public function getAutoCampaignData()
     {
         $return = collect();
         $site  = $this->getSite();
+        $invoice = $this->getInvoice();
+        $invoiceItem = $this->getInvoiceItem();
         $hideAutoCampaign = $site->getData('hideAutoCampaign');
-        
         $promotionCode = $this->getAutoCampaignCode($site);
-
         if(!empty($promotionCode) && !$hideAutoCampaign->value)
         {
-            $promotion = $this->promotionModel
-                            ->where('code',$promotionCode->value)
-                            ->first();
-
+            $promotion = $this->promotionModel->where('code',$promotionCode->value)->first();
             if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
             {
                 $return->put('promotion',$promotion);
-
                 $promotion->load('tiers');
-
                 $return->put('tiers',$promotion->tiers);
-
                 $tierValues = collect();
-
                 $promotion->tiers->each(function($tier) use (&$tierValues)
                 {
                     $tierValues->put($tier->level , $promotion->getDiscount($invoiceItem, $tier->level));
                 });
-
                 $return->put('tierValues',$tierValues);
             }
             else
@@ -202,44 +196,65 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return $return;
     }
 
-    public function setAutoCampaignData(Item $invoiceItem,$repetitions,$promotion)
-    {       
-        $invoiceItem->setDataValue('autoCampaignRepetitions', $repetitions);
-        if (0 == $repetitionCount) {
-            // Reset to weekly frequency.
-            // _setDefaultAutoCampaignFrequency only works if frequency has not been previously set.
-            $invoiceItem->setDataValue('autoCampaignFrequency', 1);
-        } else {
-            if (is_null($invoiceItem->getData('autoCampaignFrequency'))) {
+    public function setAutoCampaignData($repetitions)
+    {     
+        $promotionData = $this->getPromotionData(); 
+        $promotion = $promotionData['promotion'];   
+        if(!empty($repetitions))
+        {
+            $invoiceItem = $this->getInvoiceItem();
+            $invoiceItem->setDataValue('autoCampaignRepetitions', $repetitions);
+            if (0 == $repetitionCount) {
+                // Reset to weekly frequency.
+                // _setDefaultAutoCampaignFrequency only works if frequency has not been previously set.
                 $invoiceItem->setDataValue('autoCampaignFrequency', 1);
+            } else {
+                if (is_null($invoiceItem->getData('autoCampaignFrequency'))) {
+                    $invoiceItem->setDataValue('autoCampaignFrequency', 1);
+                }
+            }
+    
+            if ($invoiceItem->promotion_id && $invoiceItem->promotion_id != $promotion->id) 
+            {
+                $nonAutoCampaignPromoId = $invoiceItem->promotion_id;
+            }
+            if ($repetitions > 0) 
+            {
+                $invoiceItem->setPromotion($promotion);
+            } else if ($invoiceItem->promotion_id == $promotion->id) 
+            {
+                $invoiceItem->promotion_id = null;
+                $invoiceItem->promotionAmount = 0.00;
+                $invoiceItem->save();
+            }
+            $invoiceItem->buildRepetitions();
+            if (isset($nonAutoCampaignPromoId)) {
+                $invoiceItem->setPromotion(
+                    $this->promotionModel->find($nonAutoCampaignPromoId)
+                );
             }
         }
-
-        if ($invoiceItem->promotion_id && $invoiceItem->promotion_id != $promotion->id) 
-        {
-            $nonAutoCampaignPromoId = $invoiceItem->promotion_id;
-        }
-        if ($repetitions > 0) 
-        {
-            $invoiceItem->setPromotion($promotion);
-
-        } else if ($invoiceItem->promotion_id == $promotion->id) {
-            $invoiceItem->promotion_id = null;
-            $invoiceItem->promotionAmount = 0.00;
-            $invoiceItem->save();
-        }
-        $invoiceItem->buildRepetitions();
-        if (isset($nonAutoCampaignPromoId)) {
-            $invoiceItem->setPromotion(
-                $this->promotionModel->find($nonAutoCampaignPromoId)
-            );
-        }
-
-        return true;
+        return [
+            'selectAutoCampaignLegal'   =>  (
+                $this->invoiceInterface->getDataValue('acceptAutoCampaignTerms') =='true' ? TRUE : FALSE
+            ),
+            'supportPhone'              => $this->siteInterface->getSiteDataValue('companyPhoneNumber'),
+            'autoCampaignData'          => $this->productOptionsInterface->getAutoCampaignDataValue(),
+            'promotionCode'             => $promotionData['promotionCode'],
+            'promotion'                 => $promotion 
+        ] ;
     }
 
-    public function getAutoCampaignDataValue(Item $invoiceItem)
+    public function getPromotionData(){
+        $promotionCode              = $this->getAutoCampaignCode();
+        $promotion                  = $this->getPromotionByCode($promotionCode);
+
+        return compact('promotionCode','promotion');
+    }
+
+    public function getAutoCampaignDataValue()
     {
+        $invoiceItem = $this->getInvoiceItem();
         $return = collect();
         if (!$freq = $invoiceItem->getData('autoCampaignFrequency')->value) {
             $freq = 1;
@@ -250,11 +265,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function changeFrequency($frequency)
     {
         $invoiceItem = $this->getInvoiceItem();
-
         $invoiceItem->setDataValue('autoCampaignFrequency',$frequency);
-
         $invoiceItem->buildRepetitions();
-
         return true;
     }
 
@@ -548,7 +560,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                                         );
                 //add new repetitions
                 foreach ($mailingDateTimeStamps as $key => $value) {
-                    $tier = $this->promotionInterface->getPromotionTier([
+                    $tier = $this->getPromotionTier([
                             'promotion_id'  => $campaignPromo->id,
                             'level'         => $key 
                     ]);
@@ -617,6 +629,19 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
            return $this->invoiceItem->proofItem->removeProof($invoiceItem, $proof);
         }
     }
-   
 
+    public function getPromotionTier($params = []){
+		if(empty($params))
+			return ;
+		if(!empty($params['promotion_id']))
+		{
+			$this->tierModel->where('promotion_id',$params['promotion_id']);
+		}
+		if(!empty($params['level']))
+		{
+			$this->tierModel->where('level',$params['level']);
+		}
+
+		return $this->tierModel->get();
+	}
 } 
