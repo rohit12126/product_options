@@ -384,7 +384,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $invoiceItem = $this->getInvoiceItem();
         if(!empty($colorId) && !empty($invoiceItem))
         {
-           $colorOption = $invoiceItem->setStockOptionId($colorId);
+           $colorOption = $invoiceItem->setColorOptionId($colorId);
            return true; 
         }        
     }
@@ -450,7 +450,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function addBinderyItem($bindery)
     {  
         $site = $this->getSite();
-        $invoiceItem = $this->getInvoiceItem();      
+        $invoiceItem = $this->getInvoiceItem(['binderyDependentItems']);      
         $bindery =  $this->binderyOptionModel->find('1');        
         if(!empty($bindery))
         {  
@@ -461,7 +461,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             if(empty($invoiceItem->parent_invoice_item_id))
             {
              // $allBinderyOption =  $this->itemModel->where('bindery_option_id','>',0)->get();
-              $check = $this->itemModel->binderyDependentItems()->dataProducts();
+                 $invoiceItem->binderyDependentItems;
+                
+                
                
             }
         }

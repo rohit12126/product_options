@@ -5,7 +5,6 @@ use Illuminate\Http\Request;
 use App\Core\Interfaces\ProductOptionsInterface;
 use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Interfaces\SiteInterface;
-use App\Core\Interfaces\PromotionInterface;
 use App\Http\Requests\StockOptionRequest;
 use App\Http\Requests\ColorOptionRequest;
 use App\Http\Requests\ProductOption\ScheduleDateRequest;
@@ -16,13 +15,11 @@ class ProductOptionsController extends Controller
     protected $productOptionsInterface;
     protected $invoiceInterface;
     protected $siteInterface;
-    protected $promotionInterface;
 
     public function __construct(  
         ProductOptionsInterface $productOptionsInterface,
         InvoiceInterface $invoiceInterface,
-        SiteInterface $siteInterface,
-        PromotionInterface $promotionInterface
+        SiteInterface $siteInterface
     ) 
     {    
 
@@ -30,7 +27,6 @@ class ProductOptionsController extends Controller
         $this->productOptionsInterface  = $productOptionsInterface;
         $this->invoiceInterface         = $invoiceInterface;
         $this->siteInterface            = $siteInterface;
-        $this->promotionInterface       = $promotionInterface;
     }
 
     /**
