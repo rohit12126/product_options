@@ -209,7 +209,7 @@ class Item extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function binderyDependentItems()
+    public function binderyItems()
     {
         return $this->hasMany(Item::class, 'parent_invoice_item_id', 'id')->where('bindery_option_id','>','0');
     }
