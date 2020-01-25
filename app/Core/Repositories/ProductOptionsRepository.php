@@ -8,6 +8,7 @@ use App\Core\Repositories\BaseRepository;
 use App\Core\Interfaces\SiteInterface;
 use App\Core\Models\OrderCore\ColorOption;
 use App\Core\Models\OrderCore\DataProduct;
+use App\Core\Models\OrderCore\FinishOption;
 use App\Core\Models\OrderCore\StockOption;
 use App\Core\Models\OrderCore\PrintOption;
 use App\Core\Models\OrderCore\MailingOption;
@@ -24,6 +25,8 @@ use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Models\OrderCore\BinderyOption;
 use App\Core\Models\OrderCore\Proof;
 use App\Core\Models\OrderCore\Phone;
+use App\Core\Interfaces\JobCalculatorInterface;
+
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
 {
@@ -36,117 +39,169 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     protected $promotionModel;
     protected $siteInterface;
     protected $invoiceInterface;
-    protected $productPrice;
-    protected $proof;
+    protected $productPriceModel;
+    protected $proofModel;
     protected $binderyOption;
-    protected $phone;
-    protected $invoice;
-    protected $item;
+    protected $phoneModel;
+    protected $invoiceModel;
+    protected $itemModel;
     protected $tierModel;
+    protected $jobCalculatorInterface;
 
     public function __construct(
     	ProductPrint $productPrintModel,
     	MailingOption $mailingOptionModel,
-    	Product $product,
+        Product $product,
+        FinishOption $finishOptionModel,
     	StockOption $stockOptionModel,
     	ColorOption $colorOptionModel,
         PrintOption $printOptionModel,
         Promotion $promotionModel,
         SiteInterface $siteInterface,
         InvoiceInterface $invoiceInterface,
-        ProductPrice $productPrice,
-        Proof $proof,
-        BinderyOption $binderyOption,
-        Phone $phone,
-        Invoice $invoice,
-        Item $item,
-        Tier $tierModel
+        ProductPrice $productPriceModel,
+        Proof $proofModel,
+        BinderyOption $binderyOptionModel,
+        Phone $phoneModel,
+        Invoice $invoiceModel,
+        Item $itemModel,
+        Tier $tierModel,
+        JobCalculatorInterface $jobCalculatorInterface
     )
     {
         $this->productPrintModel    = $productPrintModel;
         $this->mailingOptionModel   = $mailingOptionModel;
         $this->productModel         = $product;
+        $this->finishOptionModel    = $finishOptionModel;
         $this->stockOptionModel     = $stockOptionModel;
         $this->colorOptionModel     = $colorOptionModel;
         $this->printOptionModel     = $printOptionModel;
         $this->promotionModel       = $promotionModel;
         $this->siteInterface        = $siteInterface;
         $this->invoiceInterface     = $invoiceInterface;
-        $this->productPrice         = $productPrice;
-        $this->proof                = $proof;
-        $this->binderyOption        = $binderyOption;
-        $this->phone                = $phone;
-        $this->invoice              = $invoice;
-        $this->item                 = $item;
+        $this->productPriceModel    = $productPriceModel;
+        $this->proofModel           = $proofModel;
+        $this->binderyOptionModel   = $binderyOptionModel;
+        $this->phoneModel           = $phoneModel;
+        $this->itemModel            = $itemModel;
         $this->tierModel            = $tierModel;
+        $this->jobCalculatorInterface = $jobCalculatorInterface;
     }
 
     public function getBinderyOptions(){
     	 
     }
 
-    public function getInvoice($withRelations = 'site')
+    public function getInvoice()
     {
-        return $this->invoice->with($withRelations)->find('2041833');              
+        return $this->invoiceInterface->getInvoice();              
     }
 
-    public function getInvoiceItem($itemId = '2041833')
+    public function getInvoiceItem($new =[])
     {
-        return $this->item->where('invoice_id',$itemId)->where('product_id','<>',NULL)->first();        
+        $params =  collect([
+            'id' => '2041833',
+            'relations' => 'invoice'
+        ]);        
+        $params = $params->map(function($value,$key) use($new){
+            if(!empty($new[$key]))
+                $value = $new[$key];
+
+            return $value;
+        });
+        return $this->itemModel->with($params['relations'])->where('invoice_id',$params['id'])->where('product_id','<>',NULL)->first();        
     }
 
     public function getStockOption()
     {
         $invoice = $this->getInvoice();
-        $invoiceItem =  $this->getInvoiceItem('2041833'); 
-        
+        $invoiceItem =  $this->getInvoiceItem(['relations' => 'product']); 
         if(empty($invoiceItem->date_submitted))
         {
-            $dateSubmitted = date('Y-m-d H:i:s', strtotime());
+            $dateSubmitted = Carbon::now()->format('Y-m-d H:i:s');
         }
         else
         {           
-            $dateSubmitted=date('Y-m-d H:i:s',strtotime($date_submitted));
+            $dateSubmitted = $invoiceItem->date_submitted->format('Y-m-d H:i:s');
         }
-        $product = $this->productModel->with('mailingOption','stockOption','colorOption','printOption')->find($invoiceItem->product_id);
-        
-        if(!empty($product)){
-
-            $productPrice = $this->productPrice->select('product_id')
+        $hasStockOptions = 0;
+        $stockOptions = collect();
+        if(!empty($invoiceItem->product)){
+            $stockOptionQuery = $this->stockOptionModel
+            ->join('product as p','stock_option.id','=','p.stock_option_id')
+            ->join('product_price as ppr','p.id','=','ppr.product_id')
+            ->where([
+                'product_print_id'=>$invoiceItem->product->product_print_id,
+                'mailing_option_id'=>$invoiceItem->product->mailing_option_id,             
+                'color_option_id'=>$invoiceItem->product->color_option_id,
+                'print_option_id'=>$invoiceItem->product->print_option_id,
+                'finish_option_id'=>$invoiceItem->product->finish_option_id
+            ])
             ->where('site_id',$invoice->site_id)
-            ->where('date_start','<=',$dateSubmitted)
+            ->whereDate('date_start','<=',$dateSubmitted)
             ->where(function($q) use($dateSubmitted){
                 $q->where('date_end','>',$dateSubmitted)
-                  ->orWhere('date_end', NUll);
-            })            
-            ->get();
-           
-            $stockOptions = $this->productModel->where([
-                'product_print_id'=>$product->product_print_id,
-                'mailing_option_id'=>$product->mailing_option_id,             
-                'color_option_id'=>$product->color_option_id,
-                'print_option_id'=>$product->print_option_id,
-                'finish_option_id'=>$product->finish_option_id
-            ])
-            ->whereIn('id',$productPrice)
-            ->get();
-          
-            if(!empty($stockOptions))
-            {
-                return $stockOptions;
-            }
+                  ->orWhereNull('date_end');
+            });     
             
+            $hasStockOptions = $stockOptionQuery->count();
+            if($hasStockOptions)
+            {
+                $stockOptions = $stockOptionQuery->get();
+            }
         }
-       
+        return compact('hasStockOptions','stockOptions');
+    }
+    public function getFinishOptions()
+    {
+        $site = $this->siteInterface->getSite();
+        $invoiceItem = $this->getInvoiceItem([ 'relations' => 'product' ]);
+        $finishOptions = collect();
+        $finishOptionQuery = $this->finishOptionModel
+        ->join('product as p','finish_option.id','=','p.finish_option_id')
+        ->join('product_price as ppr','ppr.product_id','=','p.id')
+        ->where([
+            'p.product_print_id' => $invoiceItem->product->product_print_id,
+            'p.mailing_option_id' => $invoiceItem->product->mailing_option_id,
+            'p.stock_option_id' => $invoiceItem->product->stock_option_id,
+            'p.color_option_id' => $invoiceItem->product->color_option_id
+        ])
+        ->where('ppr.site_id',$site->id)
+        ->whereDate('ppr.date_start','<=',Carbon::now()->format('Y-m-d H:i:s'))
+        ->where(function($query){
+            $query->where('date_end','>',Carbon::now()->format('Y-m-d H:i:s'))
+                ->orWhereNull('date_end');
+        });
+        $hasFinishOption = $finishOptionQuery->count();
+        if($hasFinishOption){
+            $finishOptions = $finishOptionQuery->get();
+        }
+        return compact('hasFinishOption','finishOptions');
     }
 
-    public function getSite()
+    public function getColorOptions()
     {
-        return $this->siteInterface->getSite();
+        $site = $this->siteInterface->getSite();
+        $invoiceItem = $this->getInvoiceItem([ 'relations' => 'product' ]);
+        $colorOptions = collect();
+        $colorOptionQuery = $this->colorOptionModel
+        ->join('product as p','color_option.id','=','p.color_option_id')
+        ->join('product_price as ppr','ppr.product_id','=','p.id')
+        ->where([
+            'p.product_print_id' => $invoiceItem->product->product_print_id,
+            'p.mailing_option_id' => $invoiceItem->product->mailing_option_id,
+            'p.stock_option_id' => $invoiceItem->product->stock_option_id,
+        ])
+        ->where('ppr.site_id',$site->id);
+        $hasColorOption = $colorOptionQuery->count();
+        if($hasColorOption){
+            $colorOptions = $colorOptionQuery->get();
+        }
+        return compact('hasColorOption','colorOptions');
     }
 
     public function getAutoCampaignCode(){
-        $site = $this->getSite();
+        $site = $this->siteInterface->getSite();
         $site->load('parent');
          if (!is_null($code = $site->getData('autoCampaignCode')->value) && !empty($code)) {
             return $code;
@@ -162,7 +217,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function getAutoCampaignData()
     {
         $return = collect();
-        $site  = $this->getSite();
+        $site  = $this->siteInterface->getSite();
         $invoice = $this->getInvoice();
         $invoiceItem = $this->getInvoiceItem();
         $hideAutoCampaign = $site->getData('hideAutoCampaign');
@@ -357,7 +412,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function setStockOptionId($stockOptionId)
     {    
-        $invoiceItem = $this->getInvoiceItem('2041833');     
+        $invoiceItem = $this->getInvoiceItem();     
         if(!empty($stockOptionId) && !empty($invoiceItem))
         {
            $stockOption = $invoiceItem->setStockOptionId($stockOptionId);
@@ -367,24 +422,18 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function setColorOptionId($colorId)
     {
-        $invoiceItem = $this->getInvoiceItem('2041833');
+        $invoiceItem = $this->getInvoiceItem();
         if(!empty($colorId) && !empty($invoiceItem))
         {
-           $colorOption = $invoiceItem->setStockOptionId($colorId);
+           $colorOption = $invoiceItem->setColorOptionId($colorId);
            return true; 
         }        
     }
-
-    public function getProof($proofId)
-    {       
-        return  $this->proof->find($proofId);       
-    }
-
+  
     public function addProofAction($proofId)
     {
-        $invoiceItem = $this->getInvoiceItem('2041833');
-        $proof = $this->getProof('1');
-        $invoiceItem->load('proofItem');        
+        $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);
+        $proof = $this->proofModel->find('1');   
         if ($invoiceItem->proofItem) {
             $invoiceItem->proofItem->proof_id = $invoiceItem->proofItem->proof_id;
             $invoiceItem->proofItem->name = $invoiceItem->proofItem->name;
@@ -429,7 +478,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
                
         if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
-             $phone = $this->phone;
+             $phone = $this->phoneModel;
              $phone->accountId = $invoiceItem->invoice->user->account->id;
          }
          $phone->number = $number;
@@ -439,19 +488,83 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     }
 
-    public function getBindery($bindaryId)
-    {
-        return $this->binderyOption->find($bindaryId);        
-    }
-
-    public function addBinderyItem($bindery)
+    public function addBinderyItem($binderyOption,$invoiceItem = null)
     {  
-        $invoice = $this->getInvoice();  
-        $bindery =  $this->getBindery('1'); 
+        $site = $this->siteInterface->getSite();
 
-        if(!empty($bindery))
-        {
-           
+        if(!$invoiceItem)
+            $invoiceItem = $this->getInvoiceItem(['relations'=>['binderyItems.binderyOption','binderyItems.binderyItems.binderyOption','binderyItems.binderyItems.binderyItems.binderyOption','product']]); 
+        $binderyOption =  $this->binderyOptionModel->find('1');        
+        if(!empty($binderyOption))
+        {  
+            if($this->jobCalculatorInterface->getBinderyOptions($binderyOption->id,$site->id))
+            { 
+               return;
+            }
+            if(empty($invoiceItem->parent_invoice_item_id))
+            {
+                foreach($invoiceItem->binderyItems as $binderyItem){
+                    if($binderyOption->type = $binderyItem->binderyOption->type)
+                        return;
+                    $binderyItemDependentBinderyOption = $binderyItem->binderyOption->getProductDependentBinderyOptions($invoiceItem->product->id)->with('binderyOption')->first();
+                    if (!is_null($binderyItemDependentBinderyOption)) {
+                        // don't add top-level bindery item bindaryOption when it's already a required dependent
+                        if ($binderyOption->type == $binderyItemDependentBinderyOption->binderyOption->type) {
+                            return;
+                        }
+                    }
+                    foreach ($binderyItem->binderyItems as $childBinderyItem) {
+                        if ($binderyOption->type == $childBinderyItem->binderyOption->type) {
+                            return;
+                        }
+                        foreach ($childBinderyItem->binderyItems as $grandChildBinderyItem) {
+                            if ($binderyOption->type == $grandChildBinderyItem->binderyOption->type) {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+                // If bindery options in the dependents' category(ies) are selected,
+                // we need to remove them first to allow appropriate inheritance.
+                $categories = array();
+                $dependentBinderyOption = $binderyOption
+                                        ->getProductDependentBinderyOptions($invoiceItem->product->id)
+                                        ->with('binderyOption')->first();
+                if ($dependentBinderyOption) {
+                    $categories[] = $dependentBinderyOption->binderyOption->type;
+                    if (!is_null(
+                        $dependentDependentBinderyOption = $dependentBinderyOption->binderyOption
+                                                            ->getProductDependentBinderyOptions($invoiceItem->product->id)
+                                                            ->with('binderyOption')->first()
+                    )) {
+                        $categories[] = $dependentDependentBinderyOption->binderyOption->type;
+                    }
+                }
+                //
+                foreach ($invoiceItem->binderyItems as $binderyItem) {
+                    if (in_array($binderyItem->binderyOption->type, $categories)) {
+                        $binderyItem->delete();
+                    }
+                }
+
+                $binderyItem = $this->itemModel->create([
+                    'invoice_id'                => $invoice->id,
+                    'parent_invoice_item_id'    => $invoiceItem->id,
+                    'bindery_option_id'         => $binderyOption->id,
+                    'quantity'                  => 1,
+                    'name'                      => $binderyOption->name,
+                    'status'                    => $invoiceItem->status, 
+                ]);
+
+                // recursively insert dependents
+                $dependentBinderyOption = $binderyOption
+                                            ->getProductDependentBinderyOptions($invoiceItem->product->id)
+                                            ->with('binderyOption')->first();
+                if ($dependentBinderyOption) {
+                    $this->addBinderyItem($dependentBinderyOption->binderyOption,$binderyItem);
+                }
+                return $binderyItem->id;
         }
     }
 
@@ -592,8 +705,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function updateFaxedPhoneNumber($number = '123456875' )
     {
-        $invoiceItem = $this->productOptionsInterface->getInvoiceItem('2041833');       
-        $invoiceItem->load('proofItem'); 
+        $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);          
         $pattern = '/^[2-9][0-8]\d[2-9]\d{6}$/';
         if (!preg_match($pattern, $number)) {
             return false;
@@ -604,7 +716,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
                
         if (!$phone = $invoiceItem->invoice->user->account->getPhoneByType('fax')) {            
-             $phone = $this->phone;
+             $phone = $this->phoneModel;
              $phone->accountId = $invoiceItem->invoice->user->account->id;
          }
          $phone->number = $number;
@@ -614,14 +726,14 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     }
 
-    public function removeInvoiceProof($invoiceItem,$proofId)
+    public function removeInvoiceProof($proofId)
     {
-        $invoiceItem = $this->getInvoiceItem('2041833');
-        $proof = $this->productOptionsInterface->getProof('1'); 
-        $invoiceItem->load('proofItem');
+        $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);
+        $proof = $this->proofModel->find('1');       
+        dd($invoiceItem->proofItem);
         if($invoiceItem->proofItem)
-        {
-           return $this->invoiceItem->proofItem->removeProof($invoiceItem, $proof);
+        {            
+            $invoiceItem->proofItem->delete();
         }
     }
 

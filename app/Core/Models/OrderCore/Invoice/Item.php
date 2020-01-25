@@ -207,6 +207,18 @@ class Item extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function binderyItems()
+    {
+        return $this->hasMany(Item::class, 'parent_invoice_item_id', 'id')->where('bindery_option_id','>','0');
+    }
+
+    public function binderyOption(){
+        return $this->hasOne('App\Core\Models\OrderCore\BinderyOption','bindery_option_id');
+    }
+
+    /**
      * @param $query
      */
     public function scopeProducts($query)
@@ -1310,13 +1322,5 @@ class Item extends BaseModel
         return $query->whereNotIn('status', ['incomplete', 'canceled']);
     }
     
-
-    // Remove the proof option setting for the invoice item
-     public function removeProof($invoiceItem, $proofOption)
-     {
-        //  while ($this->proofItem) {
-        //      $this->proofItem->delete();
-        //  }
- 
-     }
+  
 }

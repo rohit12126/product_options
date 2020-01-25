@@ -27,4 +27,8 @@ class BinderyOption extends BaseModel
      */
     protected $guarded = [];
 
+    public function getProductDependentBinderyOptions($product_id){
+        return $this->belongsTo('App\Core\Models\OrderCore\ProductBinderyOption','dependent_bindery_option_id')                 ->where('product_id',$product);
+    }
+
 }
