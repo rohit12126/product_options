@@ -191,4 +191,8 @@ class Site extends BaseModel
         $config = config('app.server_config');
         return $config['defaultSiteId'];
     }
+
+
+    
+
 }

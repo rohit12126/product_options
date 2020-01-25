@@ -23,9 +23,11 @@ interface ProductOptionsInterface
     public function setAcceptAutoCampaignTerms($accept);
     public function saveNotes($notes);    
     public function addBinderyItem($bindery,$invoiceItem); 
+    public function removeBinderyItem($binderyId);
     public function addProofAction($proofId);
     public function updateFaxedPhoneNumber($number);
     public function removeInvoiceProof($proofOption);
+    public function setFinishOption($finishId);
 
 
 } 

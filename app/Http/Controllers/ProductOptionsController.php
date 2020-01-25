@@ -61,7 +61,10 @@ class ProductOptionsController extends Controller
      */
     public function setFinishOption(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->setFinishOption($request->id)
+        ]);
     }
 
     /**
@@ -79,6 +82,7 @@ class ProductOptionsController extends Controller
             'data' => $this->productOptionsInterface->setStockOptionId($request->id)
         ]);
     }
+    
 
     /**
      * Set the color[Side] option for the invoice item
@@ -95,6 +99,24 @@ class ProductOptionsController extends Controller
             'data' => $this->productOptionsInterface->setColorOptionId($request->id)
         ]);
     }
+
+    
+    /**
+     * Get the color[Side] option for the invoice item
+     * 
+     * @author Ankit Singh
+     * @param  \Illuminate\Http\Request $request
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getColorOptions()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->getColorOptions()
+        ]);
+    }
+
 
     /**
      * Add the bindery options for the invoice item
@@ -122,7 +144,10 @@ class ProductOptionsController extends Controller
      */
     public function removeBinderyOption(Request $request)
     {
-        return response()->json();
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->removeBinderyItem($request->id)
+        ]);
     }  
 
     /**

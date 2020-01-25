@@ -152,6 +152,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
         return compact('hasStockOptions','stockOptions');
     }
+    
     public function getFinishOptions()
     {
         $site = $this->siteInterface->getSite();
@@ -178,6 +179,53 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
         return compact('hasFinishOption','finishOptions');
     }
+
+    public function setFinishOption($finishId)
+    {       
+        $invoice = $this->getInvoice();
+        $invoiceItem = $this->getInvoiceItem([
+            'relation'=>'product,product.finishOption'
+        ]);      
+
+        if(empty($invoiceItem->date_submitted))
+        {
+            $dateSubmitted = Carbon::now()->format('Y-m-d H:i:s');
+        }
+        else
+        {
+            $dateSubmitted = $invoiceItem->date_submitted->format('Y-m-d H:i:s');
+        }
+       
+        $finishOptions = collect();
+        if(!empty($invoiceItem->product)){ 
+            $finishOptionQuery = $this->productModel   
+            ->join('product_price as ppr','product.id','=','ppr.product_id')
+            ->where([
+                'product.product_print_id'=>$invoiceItem->product->product_print_id,                      
+                'product.color_option_id'=>$invoiceItem->product->color_option_id,              
+                'product.finish_option_id'=>$invoiceItem->product->finish_option_id
+            ])
+            ->where('site_id',$invoice->site_id)
+            ->whereDate('date_start','<=',$dateSubmitted)
+            ->where(function($q) use($dateSubmitted){
+                $q->where('date_end','>',$dateSubmitted)
+                  ->orWhereNull('date_end');
+            });     
+            
+            $finishOptions = $finishOptionQuery->first();        
+        }        
+
+        $invoiceItem->setDataValue('hasSelectedFinishOption', 1);
+        return [
+                'finishOption'  => $invoiceItem->product->finishOption->id,
+                'mailingOption' => $finishOptions->mailingOption,
+                'stockOption'   => $finishOptions->stockOption,
+                'colorOption'   => $finishOptions->colorOption,
+                'printOption'   => $finishOptions->printOption
+        ];
+        
+    }
+
 
     public function getColorOptions()
     {
@@ -496,12 +544,12 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $site = $this->siteInterface->getSite();
 
         if(!$invoiceItem)
-            $invoiceItem = $this->getInvoiceItem(['relations'=>['binderyItems.binderyOption','binderyItems.binderyItems.binderyOption','binderyItems.binderyItems.binderyItems.binderyOption','product']]); 
+           $invoiceItem = $this->getInvoiceItem(['relations'=>['binderyItems.binderyOption','binderyItems.binderyItems.binderyOption','binderyItems.binderyItems.binderyItems.binderyOption','product']]); 
         $binderyOption =  $this->binderyOptionModel->find('1');        
         if(!empty($binderyOption))
         {  
             if($this->jobCalculatorInterface->getBinderyOptions($binderyOption->id,$site->id))
-            { 
+            {
                return;
             }
             if(empty($invoiceItem->parent_invoice_item_id))
@@ -568,6 +616,19 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                     $this->addBinderyItem($dependentBinderyOption->binderyOption,$binderyItem);
                 }
                 return $binderyItem->id;
+        }
+    }
+
+    public function removeBinderyItem($binderyOption)
+    {
+        $site = $this->siteInterface->getSite();
+        $binderyOption =  $this->binderyOptionModel->find('1'); 
+        if(!empty($binderyOption))
+        {
+            $invoiceItem = $this->getInvoiceItem(['relations'=>['binderyItems.binderyOption','binderyItems.binderyItems.binderyOption','binderyItems.binderyItems.binderyItems.binderyOption','product']]); 
+            $binderyData = $this->jobCalculatorInterface->getBinderyOptions($binderyOption->id,$site->id);
+            $this->binderyOptionModel->delete($binderyData->id);
+            return true;
         }
     }
 
