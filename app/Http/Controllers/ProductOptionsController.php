@@ -29,6 +29,18 @@ class ProductOptionsController extends Controller
         $this->siteInterface            = $siteInterface;
     }
 
+
+    public function product(){
+        $optionsData = $this->productOptionsInterface->getCollection();
+        if(!empty($optionsData)){
+            // redirect code goes here
+            echo "Data Not Found";
+        }
+        //dd($optionsData);
+        return view('product',compact(
+            'optionsData'
+        ));
+    }
     /**
      * Display a listing of the resource.
      *

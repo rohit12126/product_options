@@ -224,7 +224,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $promotionCode = $this->getAutoCampaignCode($site);
         if(!empty($promotionCode) && !$hideAutoCampaign->value)
         {
-            $promotion = $this->promotionModel->where('code',$promotionCode->value)->first();
+            $promotion = $this->promotionModel->where('code',$promotionCode)->first();
             if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
             {
                 $return->put('promotion',$promotion);
@@ -242,7 +242,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                 $hideAutoCampaign = true;
             }
         }
-
+        
+        $return->put('autoCampaignData',$this->productOptionsInterface->getAutoCampaignDataValue());
         $return->put('hideAutoCampaign',$hideAutoCampaign->value);        
         return $return;
     }
@@ -309,8 +310,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $return = collect();
         if (!$freq = $invoiceItem->getData('autoCampaignFrequency')->value) {
             $freq = 1;
+            $return->put('frequency',$freq);
         }
-        $reps = $invoiceItem->getData('autoCampaignRepetitions')->value;
+        $return->put('repetitions',$invoiceItem->getData('autoCampaignRepetitions')->value);
+        return $return;
     }
 
     public function changeFrequency($frequency)
@@ -750,5 +753,18 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 		}
 
 		return $this->tierModel->get();
-	}
+    }
+
+    public function getCollection(){
+        $data = null;
+        $data['finishOptions'] = $this->getFinishOptions();
+        $data['stockOptions'] = $this->getStockOption();
+        $site = $this->siteInterface->getSite(); 
+        $invoiceItem = $this->getInvoiceItem();
+        $data['binderyOptions'] = [];
+        $data['binderyOptions'] = $this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id);
+        $data['repitation'] = $this->getAutoCampaignData();
+        
+        return $data;
+    }
 } 
