@@ -42,8 +42,11 @@
                 <div class="form-group">
                     <label>@lang('product_option.finish_option')</label>
                     <select class="form-control" >
-                        <option>Bi Fold</option>
-                        <option>Tri Fold</option>
+                        @if ($optionsData['finishOptions']['hasFinishOption'] > 0)
+                            @foreach ($optionsData['finishOptions']['finishOptions'] as $finish)
+                                <option value="{{ $finish->id }}">{{ $finish->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                 </div>
                 <div class="bindery-option-block">
@@ -113,9 +116,11 @@
                 <div class="form-group">
                     <label>@lang('product_option.paper')</label>
                     <select class="form-control" >
-                        <option>Stock 1</option>
-                        <option>Stock 2</option>
-                        <option>Stock 3</option>
+                        @if ($optionsData['stockOptions']['hasStockOptions'] > 0)
+                            @foreach ($optionsData['stockOptions']['stockOptions'] as $paper)
+                                <option value="{{ $paper->id }}">{{ $paper->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                 </div>
                 <div class="form-group">

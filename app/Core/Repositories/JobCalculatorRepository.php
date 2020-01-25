@@ -752,5 +752,50 @@ class JobCalculatorRepository extends BaseRepository implements JobCalculatorInt
             return $shippingFailOver[0]['price'] * $multiplierTable[$zipPrefix];
         }
     }
-
+    public function getProductPrintOption($productPrintData)
+    {
+        $productPrintId     = $this->productPrintOption->insertGetId($productPrintData);         
+        return $this->productPrintOption->find($productPrintId);
+    } 
+    public function getMailingOption($mailingOption)
+    {
+        $productPrintId     = $this->mailingOption->insertGetId($mailingOption);         
+        return $this->mailingOption->find($productPrintId);
+    } 
+    public function getStockOption($stockOption)
+    {
+        $stockOptionId     = $this->stockOption->insertGetId($stockOption);         
+        return $this->stockOption->find($stockOptionId);
+    }
+    public function getColorOption($colorOption)
+    {
+        $colorOptionId     = $this->colorOption->insertGetId($colorOption);         
+        return $this->colorOption->find($colorOptionId);
+    }
+    public function getPrintOption($printOption)
+    {
+        $printOptionId     = $this->printOption->insertGetId($printOption);         
+        return $this->printOption->find($printOptionId);
+    }
+    public function getFinishOption($finishOption)
+    {
+        $finishOptionId     = $this->finishOption->insertGetId($finishOption);         
+        return $this->finishOption->find($finishOptionId);
+    }
+    public function getprooduct($product)
+    {
+        $productId     = $this->product->insertGetId($product);         
+        return $this->product->find($productId);
+    }
+    public function getSite($site)
+    {
+        $siteId     = $this->site->insertGetId($site);         
+        return $this->site->find($siteId);
+    }
+    public function getProductPrice($productPriceData)
+    {
+        $productPriceId     = $this->productPrice->insertGetId($productPriceData);         
+        return $this->productPrice->find($productPriceId);
+    }
+    
 }
