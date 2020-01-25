@@ -14,8 +14,8 @@ interface ProductOptionsInterface
     public function setColorOptionId($colorId);
     public function setScheduledDate($date);
     public function getAutoCampaignCode();
-    public function setAutoCampaignData(Item $invoiceItem,$repetitions,$promotion);
-    public function getAutoCampaignDataValue(Item $invoiceItem);
+    public function setAutoCampaignData($repetitions);
+    public function getAutoCampaignDataValue();
     public function changeFrequency($frequency);
     public function getRepeatitionDates();
     public function setAcceptAutoCampaignTerms($accept);

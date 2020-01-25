@@ -614,7 +614,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     }
 
-    public function removeInvoiceProof($invoiceItem,$proofId)
+    public function removeInvoiceProof($proofId)
     {
         $invoiceItem = $this->getInvoiceItem('2041833');
         $proof = $this->productOptionsInterface->getProof('1'); 

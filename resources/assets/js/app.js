@@ -6,6 +6,8 @@
  */
 
 require('./bootstrap');
+require("bootstrap-datepicker");
+require('./ecr_lara_min');
 
 window.Vue = require('vue');
 
