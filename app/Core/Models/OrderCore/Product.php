@@ -77,6 +77,14 @@ class Product extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function finishOption()
+    {
+        return $this->hasOne('App\Core\Models\OrderCore\FinishOption', 'id','finish_option_id');
+    }
+
+    /**
      * @param $quantity
      * @param null $timestamp
      * @param null $siteId
