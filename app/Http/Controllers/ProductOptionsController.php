@@ -31,15 +31,9 @@ class ProductOptionsController extends Controller
 
 
     public function product(){
-        $optionsData = $this->productOptionsInterface->getCollection();
-        if(!empty($optionsData)){
-            // redirect code goes here
-            echo "Data Not Found";
-        }
-        //dd($optionsData);
-        return view('product',compact(
-            'optionsData'
-        ));
+        $optionsData = $this->productOptionsInterface->getCollection();   
+       // dd($optionsData);  
+        return view('product',$optionsData);
     }
     /**
      * Display a listing of the resource.
