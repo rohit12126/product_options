@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Core\Interfaces\ProductOptionsInterface;
 use App\Core\Interfaces\InvoiceInterface;
 use App\Core\Interfaces\SiteInterface;
+use App\Core\Interfaces\JobCalculatorInterface;
 use App\Http\Requests\StockOptionRequest;
 use App\Http\Requests\ColorOptionRequest;
 use App\Http\Requests\ProductOption\ScheduleDateRequest;
@@ -15,11 +16,13 @@ class ProductOptionsController extends Controller
     protected $productOptionsInterface;
     protected $invoiceInterface;
     protected $siteInterface;
+    protected $jobInterface;
 
     public function __construct(  
         ProductOptionsInterface $productOptionsInterface,
         InvoiceInterface $invoiceInterface,
-        SiteInterface $siteInterface
+        SiteInterface $siteInterface,
+        JobCalculatorInterface $jobInterface
     ) 
     {    
 
@@ -27,13 +30,7 @@ class ProductOptionsController extends Controller
         $this->productOptionsInterface  = $productOptionsInterface;
         $this->invoiceInterface         = $invoiceInterface;
         $this->siteInterface            = $siteInterface;
-    }
-
-
-    public function product(){
-        $optionsData = $this->productOptionsInterface->getCollection();   
-       // dd($optionsData);  
-        return view('product',$optionsData);
+        $this->jobInterface             = $jobInterface;
     }
     /**
      * Display a listing of the resource.
@@ -42,7 +39,7 @@ class ProductOptionsController extends Controller
      */
     public function index()
     {   
-        $getStock = $this->productOptionsInterface->getStockOption($invoiceItem->date_submitted, $invoiceItem->product_id, $invoice->site_id);
+        return view('product',$this->productOptionsInterface->getCollection());
     }
 
     /**

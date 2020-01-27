@@ -265,9 +265,9 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $site  = $this->siteInterface->getSite();
         $invoice = $this->getInvoice();
         $invoiceItem = $this->getInvoiceItem();
-        $hideAutoCampaign = $site->getData('hideAutoCampaign');
+        $hideAutoCampaign = $site->getData('hideAutoCampaign')->value;
         $promotionCode = $this->getAutoCampaignCode($site);
-        if(!empty($promotionCode) && !$hideAutoCampaign->value)
+        if(!empty($promotionCode) && !$hideAutoCampaign)
         {
             $promotion = $this->promotionModel->where('code',$promotionCode)->first();
             if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
@@ -288,8 +288,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             }
         }
         
-        $return->put('autoCampaignData',$this->productOptionsInterface->getAutoCampaignDataValue());
-        $return->put('hideAutoCampaign',$hideAutoCampaign->value);        
+        $return->put('autoCampaignData',$this->getAutoCampaignDataValue());
+        $return->put('hideAutoCampaign',$hideAutoCampaign);        
         return $return;
     }
 
@@ -820,8 +820,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $site = $this->siteInterface->getSite(); 
         $invoiceItem = $this->getInvoiceItem();
         $data->put('binderyOptions',$this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id));
-      //  $data['repitation'] = $this->getAutoCampaignData();
-    
+        $data = $data->merge($this->getAutoCampaignData());
         return $data;
     }
 } 
