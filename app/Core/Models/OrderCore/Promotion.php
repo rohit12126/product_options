@@ -41,7 +41,8 @@ class Promotion extends BaseModel
     public function isEligible(Invoice $invoice, Item $item = null)
     {
         $result = DB::select('SELECT fn_invoice_promo_eligible(?,?) AS eligible', [$invoice->id, $this->id]);
-        if (!is_null($result[0]->eligible)) {
+        
+        if (!empty($result) && !is_null($result[0]->eligible)) {
             $this->errors[] = $result[0]->eligible;
             return false;
         }

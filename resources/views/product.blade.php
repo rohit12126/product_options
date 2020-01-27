@@ -79,25 +79,7 @@
 
                 <!-- paper option select Uncoated Cover Stock show Add Bindery optoin -->
                 <div class="bindery-option-block">
-                    <h3 class="text-center">@lang('product_option.bindery')</h3>
-                    <div class="form-group">
-                        <label>@lang('product_option.folding')</label>
-                        <select class="form-control" >
-                            <option>None</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>@lang('product_option.scoring')</label>
-                        <select class="form-control" >
-                            <option>None</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>@lang('product_option.sealing')</label>
-                        <select class="form-control" >
-                            <option>None</option>
-                        </select>
-                    </div>
+                        @include('product_options.bindery_options')
                 </div>
 
                 <!-- Proof option -->
@@ -111,43 +93,10 @@
                         @lang('product_option.proof_price')
                     </div>
                 </div>
-
+                
+                <!--Return Address Block -->
                 <div class="return-address-block" id="addressBlock">
-                    <h3 class="text-center">@lang('product_option.return_address')</h3>
-                    <div class="form-group">
-                        <label>@lang('product_option.name')</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>    
-                    <div class="form-group">
-                        <label>@lang('product_option.company')</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>    
-                    <div class="form-group">
-                        <label>@lang('product_option.address1')</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>    
-                    <div class="form-group">
-                        <label>@lang('product_option.address2')</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>    
-                    <div class="form-group">
-                        <label>@lang('product_option.city')</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>    
-                    <div class="form-group row">
-                        <div class="col-md-6">
-                            <label>@lang('product_option.state')</label>
-                            <select class="form-control" >
-                                <option>Arizona</option>
-                                <option>California</option>
-                                <option>Texas</option>
-                            </select>        
-                        </div>
-                        <div class="col-md-6">
-                            <label>@lang('product_option.zip')</label>
-                            <input type="text" class="form-control" placeholder="">
-                        </div>
-                    </div>
+                    @include('product_options.return_address')
                 </div>
                 <div class="form-group">
                     <div class="form-check">
@@ -155,26 +104,9 @@
                         <label class="form-check-label">@lang('product_option.no_return_address')</label>
                     </div>
                 </div>                
-              
-                <div class="form-group">
-                    <label>@lang('product_option.production_date')</label>
-                    <div class="input-group date" >
-                        <input type="text" class="form-control datepicker">
-                        <div class="input-group-addon">
-                            <span class="glyphicon glyphicon-th"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>@lang('product_option.repeat_mailing')</label>
-                    <select class="form-control" >
-                        <option>0 times</option>
-                        <option>Send 2x</option>
-                        <option>Send 3x</option>
-                        <option>Send 4x</option>
-                        <option>Send 5x</option>
-                    </select>
-                </div>
+                @if(!$hideAutoCampaign)
+                    @include('product_options.auto_campaign')
+                @endif
                 <div class="form-group">
                     <label>@lang('product_option.notes')</label>
                     <textarea class="form-control" rows="10" cols="10">
