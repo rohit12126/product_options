@@ -142,13 +142,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             ->where(function($q) use($dateSubmitted){
                 $q->where('date_end','>',$dateSubmitted)
                   ->orWhereNull('date_end');
-            });     
-            
-            $hasStockOptions = $stockOptionQuery->count();
-            if($hasStockOptions)
-            {
-                $stockOptions = $stockOptionQuery->get();
-            }
+            })->groupBy('p.stock_option_id');     
+
+            $stockOptions = $stockOptionQuery->get();
+            $hasStockOptions = ($stockOptions->count() > 1)?true:false;
         }
         return compact('hasStockOptions','stockOptions');
     }
@@ -172,11 +169,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         ->where(function($query){
             $query->where('date_end','>',Carbon::now()->format('Y-m-d H:i:s'))
                 ->orWhereNull('date_end');
-        });
-        $hasFinishOption = $finishOptionQuery->count();
-        if($hasFinishOption){
-            $finishOptions = $finishOptionQuery->get();
-        }
+        })->groupBy('p.finish_option_id');
+        $finishOptions = $finishOptionQuery->get();
+        $hasFinishOption = ($finishOptions->count() > 1)?true:false;
+       
         return compact('hasFinishOption','finishOptions');
     }
 
@@ -240,7 +236,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             'p.mailing_option_id' => $invoiceItem->product->mailing_option_id,
             'p.stock_option_id' => $invoiceItem->product->stock_option_id,
         ])
-        ->where('ppr.site_id',$site->id);
+        ->where('ppr.site_id',$site->id)
+        ->groupBy('p.color_option_id');
         $hasColorOption = $colorOptionQuery->count();
         if($hasColorOption){
             $colorOptions = $colorOptionQuery->get();
@@ -793,8 +790,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function removeInvoiceProof($proofId)
     {
         $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);
-        $proof = $this->proofModel->find('1');       
-        dd($invoiceItem->proofItem);
+        $proof = $this->proofModel->find('1');          
         if($invoiceItem->proofItem)
         {            
             $invoiceItem->proofItem->delete();
@@ -817,15 +813,15 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     }
 
     public function getCollection(){
-        $data = null;
-        $data['finishOptions'] = $this->getFinishOptions();
-        $data['stockOptions'] = $this->getStockOption();
+        $data = collect();
+        $data = $data->merge($this->getFinishOptions());
+        $data = $data->merge($this->getStockOption());
+        $data = $data->merge($this->getColorOptions());
         $site = $this->siteInterface->getSite(); 
         $invoiceItem = $this->getInvoiceItem();
-        $data['binderyOptions'] = [];
-        $data['binderyOptions'] = $this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id);
-        $data['repitation'] = $this->getAutoCampaignData();
-        
+        $data->put('binderyOptions',$this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id));
+      //  $data['repitation'] = $this->getAutoCampaignData();
+    
         return $data;
     }
 } 
