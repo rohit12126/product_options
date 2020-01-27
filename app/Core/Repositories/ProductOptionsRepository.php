@@ -270,22 +270,22 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         if(!empty($promotionCode) && !$hideAutoCampaign)
         {
             $promotion = $this->promotionModel->where('code',$promotionCode)->first();
-            if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
-            {
-                $return->put('promotion',$promotion);
-                $promotion->load('tiers');
-                $return->put('tiers',$promotion->tiers);
-                $tierValues = collect();
-                $promotion->tiers->each(function($tier) use (&$tierValues)
-                {
-                    $tierValues->put($tier->level , $promotion->getDiscount($invoiceItem, $tier->level));
-                });
-                $return->put('tierValues',$tierValues);
-            }
-            else
-            {
+            // if(!$invoiceItem->original_invoice_item_id && $promotion->isEligible($invoice,$invoiceItem))
+            // {
+            //     $return->put('promotion',$promotion);
+            //     $promotion->load('tiers');
+            //     $return->put('tiers',$promotion->tiers);
+            //     $tierValues = collect();
+            //     $promotion->tiers->each(function($tier) use (&$tierValues)
+            //     {
+            //         $tierValues->put($tier->level , $promotion->getDiscount($invoiceItem, $tier->level));
+            //     });
+            //     $return->put('tierValues',$tierValues);
+            // }
+            // else
+            // {
                 $hideAutoCampaign = true;
-            }
+            //}
         }
         
         $return->put('autoCampaignData',$this->getAutoCampaignDataValue());
@@ -460,7 +460,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function setStockOptionId($stockOptionId)
     {    
-        $invoiceItem = $this->getInvoiceItem();     
+        $invoiceItem = $this->getInvoiceItem(['relations'=>'product']); 
         if(!empty($stockOptionId) && !empty($invoiceItem))
         {
            $stockOption = $invoiceItem->setStockOptionId($stockOptionId);
@@ -480,7 +480,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
   
     public function addProofAction($proofId)
     {
-        $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);
+        $invoiceItem = $this->getInvoiceItem(['relations'=>'proofItem']);        
         $proof = $this->proofModel->find('1');   
         if ($invoiceItem->proofItem) {
             $invoiceItem->proofItem->proof_id = $invoiceItem->proofItem->proof_id;
@@ -488,11 +488,11 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
             $invoiceItem->proofItem->save();
         } else {
             $this->invoiceInterface->saveProofItem($invoiceItem, $proof);
-        }
-
+        }            
         if ($proof->delivery_method == 'faxed') {
             $this->setFaxedProofPhoneNumber($invoiceItem,$this->getFaxedProofPhoneNumber($invoiceItem));
         }
+        return true;
     }
 
     public function getFaxedProofPhoneNumber(&$invoiceItem)

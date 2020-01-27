@@ -56,10 +56,10 @@
                 <!-- Stock option -->              
                 <div class="form-group">
                     <label>@lang('product_option.paper')</label>
-                    <select class="form-control" id= "stock_option" >
+                    <select class="form-control stock_option" >
                         @if ($hasStockOptions)
                             @foreach ($stockOptions as $paper)
-                                <option value="{{ $paper['id'] }}" onclick="selectStockOption($finish['id']);" >{{ $paper['name'] }}</option>
+                                <option value="{{ $paper['id'] }}" >{{ $paper['name'] }}</option>
                             @endforeach
                         @endif
                     </select>
@@ -78,7 +78,7 @@
                 </div>
 
                 <!-- paper option select Uncoated Cover Stock show Add Bindery optoin -->
-                <div class="bindery-option-block">
+                <div class="bindery-option-block" style="display:none;">
                         @include('product_options.bindery_options')
                 </div>
 
@@ -86,7 +86,7 @@
                 <div class="form-group">
                     <label></label>
                     <div class="form-check pull-left" >
-                        <input class="form-check-input" type="checkbox">
+                        <input class="form-check-input shipped_proof" name="shipped_proof" type="checkbox">
                         <label class="form-check-label">@lang('product_option.proof')</label>
                     </div>
                     <div class="pull-right">
@@ -95,6 +95,7 @@
                 </div>
                 
                 <!--Return Address Block -->
+                @if($hasFinishOption)
                 <div class="return-address-block" id="addressBlock">
                     @include('product_options.return_address')
                 </div>
@@ -112,6 +113,8 @@
                     <textarea class="form-control" rows="10" cols="10">
                     </textarea> 
                 </div>
+                @endif
+
                 <div class="form-group text-center">
                     <button type="submit" class=" btn btn-theme-secondary text-center product-opt-next-btn">@lang('product_option.next_btn')</button>
                 </div>
@@ -125,10 +128,5 @@
     $(document).ready(function(){
         window.productOption.__init();
     });
-
-    function selectStockOption($id)
-    {
-        alert($id);
-    }
 </script>
 @endpush

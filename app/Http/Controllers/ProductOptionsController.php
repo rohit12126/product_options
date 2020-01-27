@@ -67,11 +67,14 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function setStockOption(StockOptionRequest $request)
-    {            
+    {   
         return response()->json([
             'status' => 'success',
             'data' => $this->productOptionsInterface->setStockOptionId($request->id)
         ]);
+
+        //  $returnHTML = view('product_options.bindery_options')->render();
+        //  return response()->json(array($returnHTML));
     }
     
 
