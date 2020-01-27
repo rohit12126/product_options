@@ -505,7 +505,7 @@ class Item extends BaseModel
             }
             $options['productPrint'] = $this->product->product_print_id;
         }
-
+        dd($this->invoice->site);
         $currentProducts = $this->invoice->site->currentProducts;
 
         // If mailing option is not passed, load current (if set and valid) or load default
@@ -695,7 +695,9 @@ class Item extends BaseModel
 
         // Retrieve product
         $found = false;
+        
         foreach ($currentProducts as $availableProduct) {
+            dd($availableProduct);
             if (
                 $availableProduct->product->product_print_id === $options['productPrint'] &&
                 $availableProduct->product->mailing_option_id === $options['mailingOption'] &&
@@ -711,6 +713,7 @@ class Item extends BaseModel
                 break;
             }
         }
+        
         if (!$found) {
             throw new Exception('Product not found for provided option(s).');
         }
@@ -954,6 +957,7 @@ class Item extends BaseModel
         }
         if ($this->getStockOption()->id != $stockOptionId) {
             $currentProduct = $this->product;
+            //dd($currentProduct);
             $this->_resetProduct(
                 [
                     'productPrint' => $currentProduct->product_print_id,

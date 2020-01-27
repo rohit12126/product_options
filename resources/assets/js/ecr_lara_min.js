@@ -1,4 +1,9 @@
 (function($) {
+
+  jQuery.ajaxSetup({
+    cache: false
+});
+
   var ecl;
   var config;
   var ecl = {
@@ -14,10 +19,8 @@
         url: urn,
         method: method,
         data: data,
-        contentType: "application/json",
         cache: false,
-        processData: false,
-        ...headers,
+        headers:headers,
         success: eval(callback), // call back function and it returns to relevent function
         error: erroCallback
       });
@@ -107,7 +110,50 @@
           $("#addressBlock").show();
         }
       });   
+    },
+    selectStockoption: $form => {      
+      $form.on('change','.stock_option',function(){  
+        var data = {};
+        data.id = $(this).val();
+        console.log(data);
+        ecl._callApi(
+          'setStockOption', 'POST',data,function(response){
+            $(".bindery-option-block").show();
+            $(".bindery-option-block").empty().append(response);
+          } , function(response){
+            console.log(response);
+          },
+          {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+          }
+        )
+      });
+    },
+    shippedProof: $form => {
+      $form.on('change','.shipped_proof',function(){
+        var data = {};
+        var checkbox = $('[name="shipped_proof"]');
+        if (checkbox.is(':checked'))
+        {
+          data.id = '1'; 
+        }else
+        {
+          data.id = '0';
+        }                             
+          ecl._callApi(
+          'addProof', 'POST',data,function(response){
+            console.log(response);
+          } , function(response){
+            console.log(response);
+          },
+          {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+          }
+        )
+      });
     }
+
+
   };
 
   const productOption = {
@@ -115,6 +161,8 @@
       const $form = $("#productOptionForm");
       productOptionHandler.handleDatePicker();
       productOptionHandler.handleAddressBlockChange($form);
+      productOptionHandler.selectStockoption($form);
+      productOptionHandler.shippedProof($form);
     }
   };
   window.productOption = productOption;

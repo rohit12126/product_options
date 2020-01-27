@@ -22,7 +22,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('product', 'ProductOptionsController@product')->name('product');
 Route::get('productOption', 'ProductOptionsController@index')->name('productOption');
 
-Route::get('setStockOption','ProductOptionsController@setStockOption')->name('setStockOption');
+Route::POST('setStockOption','ProductOptionsController@setStockOption')->name('setStockOption');
 Route::get('setColorOption','ProductOptionsController@setColorOption')->name('setColorOption');
 
 Route::get('schedule_date','ProductOptionsController@setScheduledProductionDate');
@@ -30,7 +30,7 @@ Route::get('schedule_date','ProductOptionsController@setScheduledProductionDate'
 Route::get('auto_campaign','ProductOptionsController@getAutoCampaign');
 Route::get('addBinderyOption','ProductOptionsController@addBinderyOption')->name('addBinderyOption');
 Route::get('removeBinderyOption','ProductOptionsController@removeBinderyOption')->name('removeBinderyOption');
-Route::get('addProof','ProductOptionsController@addProof')->name('addProof');
+Route::post('addProof','ProductOptionsController@addProof')->name('addProof');
 Route::get('removeProof','ProductOptionsController@removeProof')->name('removeProof');
 Route::get('addBinderyItem','ProductOptionsController@addBinderyOption')->name('addBinderyItem');
 Route::get('setFinishOption','ProductOptionsController@setFinishOption')->name('setFinishOption');
