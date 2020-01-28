@@ -39,11 +39,14 @@
         <div class="col-md-8">
             <h2 class="text-center">@lang('product_option.details')</h2>
             <form id="productOptionForm" method="post" action="">
+
+            <!-- Replace this div according to option select -->
+        
                 <!-- Finish option -->
                 @if($hasFinishOption)
-                <div class="form-group">
+                <div class="form-group finish_option_section">
                     <label>@lang('product_option.finish_option')</label>                    
-                    <select class="form-control">                       
+                    <select class="form-control finish_option">                       
                         @if ($hasFinishOption > 0)
                             @foreach ($finishOptions as $finish)
                                 <option value="{{ $finish['id'] }}" >{{ $finish['name'] }}</option>
@@ -54,9 +57,10 @@
                 @endif
 
                 <!-- Stock option -->              
-                <div class="form-group">
+                <div class="form-group stock_option_section">
                     <label>@lang('product_option.paper')</label>
-                    <select class="form-control stock_option" >
+                    <!-- <select class="form-control @if(!empty($binderyOptions)) stock_option @endif"> -->
+                    <select class="form-control stock_option">
                         @if ($hasStockOptions)
                             @foreach ($stockOptions as $paper)
                                 <option value="{{ $paper['id'] }}" >{{ $paper['name'] }}</option>
@@ -66,9 +70,9 @@
                 </div>
 
                 <!-- Side/color Option -->
-                <div class="form-group">
+                <div class="form-group stock_color_section">
                     <label>@lang('Side')</label>
-                    <select class="form-control" >
+                    <select class="form-control @if(count($colorOptions)>1) color_option @endif" >
                         @if ($hasColorOption)
                             @foreach ($colorOptions as $color)
                                 <option value="{{ $color['id'] }}">{{ $color['name'] }}</option>
@@ -81,6 +85,10 @@
                 <div class="bindery-option-block" style="display:none;">
                         @include('product_options.bindery_options')
                 </div>
+                
+
+           
+            <!-- common section end here -->
 
                 <!-- Proof option -->
                 <div class="form-group">
@@ -94,6 +102,7 @@
                     </div>
                 </div>
                 
+                
                 <!--Return Address Block -->
                 @if($hasFinishOption)
                 <div class="return-address-block" id="addressBlock">
@@ -104,7 +113,9 @@
                         <input class="form-check-input return-address" type="checkbox">
                         <label class="form-check-label">@lang('product_option.no_return_address')</label>
                     </div>
-                </div>    
+                </div>  
+                @endif
+
                 <div class="form-group">
                     <label>@lang('product_option.production_date')</label>
                     <div class="input-group date" >
@@ -122,7 +133,7 @@
                     <textarea class="form-control" rows="10" cols="10">
                     </textarea> 
                 </div>
-                @endif
+              
 
                 <div class="form-group text-center">
                     <button type="submit" class=" btn btn-theme-secondary text-center product-opt-next-btn">@lang('product_option.next_btn')</button>
