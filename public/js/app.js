@@ -34451,9 +34451,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 /* 36 */
 /***/ (function(module, exports) {
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 (function ($) {
+
+  jQuery.ajaxSetup({
+    cache: false
+  });
+
   var ecl;
   var config;
   var ecl = {
@@ -34461,17 +34464,15 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
       var erroCallback = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : undefined;
       var headers = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
 
-      $.ajax(_extends({
+      $.ajax({
         url: urn,
         method: method,
         data: data,
-        contentType: "application/json",
         cache: false,
-        processData: false
-      }, headers, {
+        headers: headers,
         success: eval(callback), // call back function and it returns to relevent function
         error: erroCallback
-      }));
+      });
     }
   };
   window.ecl = ecl;
@@ -34547,7 +34548,46 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
           $("#addressBlock").show();
         }
       });
+    },
+    selectStockoption: function selectStockoption($form) {
+      $form.on('change', '.stock_option', function () {
+        var data = {};
+        data.id = $(this).val();
+        console.log(data);
+        ecl._callApi('setStockOption', 'POST', data, function (response) {
+          $(".bindery-option-block").show();
+          $(".bindery-option-block").empty().append(response);
+        }, function (response) {
+          console.log(response);
+        }, {
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        });
+      });
+    },
+    shippedProof: function shippedProof($form) {
+      $form.on('change', '.shipped_proof', function () {
+        var data = {};
+        var url = '';
+        var checkbox = $('[name="shipped_proof"]');
+        if (checkbox.is(':checked')) {
+          data.id = '1';
+          url = 'addProof';
+          // addProof Route call
+        } else {
+          data.id = '0';
+          url = 'removeProof';
+          // removeProof Route call
+        }
+        ecl._callApi(url, 'POST', data, function (response) {
+          console.log(response);
+        }, function (response) {
+          console.log(response);
+        }, {
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        });
+      });
     }
+
   };
 
   var productOption = {
@@ -34555,6 +34595,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
       var $form = $("#productOptionForm");
       productOptionHandler.handleDatePicker();
       productOptionHandler.handleAddressBlockChange($form);
+      productOptionHandler.selectStockoption($form);
+      productOptionHandler.shippedProof($form);
     }
   };
   window.productOption = productOption;

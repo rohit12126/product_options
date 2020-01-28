@@ -31,6 +31,6 @@ Route::get('auto_campaign','ProductOptionsController@getAutoCampaign');
 Route::get('addBinderyOption','ProductOptionsController@addBinderyOption')->name('addBinderyOption');
 Route::get('removeBinderyOption','ProductOptionsController@removeBinderyOption')->name('removeBinderyOption');
 Route::post('addProof','ProductOptionsController@addProof')->name('addProof');
-Route::get('removeProof','ProductOptionsController@removeProof')->name('removeProof');
+Route::post('removeProof','ProductOptionsController@removeProof')->name('removeProof');
 Route::get('addBinderyItem','ProductOptionsController@addBinderyOption')->name('addBinderyItem');
 Route::get('setFinishOption','ProductOptionsController@setFinishOption')->name('setFinishOption');
