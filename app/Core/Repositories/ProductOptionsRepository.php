@@ -26,6 +26,7 @@ use App\Core\Models\OrderCore\BinderyOption;
 use App\Core\Models\OrderCore\Proof;
 use App\Core\Models\OrderCore\Phone;
 use App\Core\Interfaces\JobCalculatorInterface;
+use App\Http\Helpers\HolidayHelper;
 
 
 class ProductOptionsRepository extends BaseRepository implements ProductOptionsInterface
@@ -289,7 +290,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
         
         $return->put('autoCampaignData',$this->getAutoCampaignDataValue());
-        $return->put('hideAutoCampaign',$hideAutoCampaign);        
+        $return->put('hideAutoCampaign',false);
+        $return->put('selectAutoCampaignLegal', (
+            $this->invoiceInterface->getDataValue('acceptAutoCampaignTerms') =='true' ? TRUE : FALSE
+        ));
         return $return;
     }
 
@@ -310,7 +314,6 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                     $invoiceItem->setDataValue('autoCampaignFrequency', 1);
                 }
             }
-    
             if ($invoiceItem->promotion_id && $invoiceItem->promotion_id != $promotion->id) 
             {
                 $nonAutoCampaignPromoId = $invoiceItem->promotion_id;
@@ -355,9 +358,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $return = collect();
         if (!$freq = $invoiceItem->getData('autoCampaignFrequency')->value) {
             $freq = 1;
-            $return->put('frequency',$freq);
         }
+        $return->put('frequency',$freq);
         $return->put('repetitions',$invoiceItem->getData('autoCampaignRepetitions')->value);
+        $return->put('dates',$this->getRepeatitionDates(4));
         return $return;
     }
 
@@ -369,7 +373,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         return true;
     }
 
-    public function getRepeatitionDates()
+    public function getRepeatitionDates($repetitions)
     {
         $invoiceItem = $this->getInvoiceItem();
         $mailingDates = collect();
@@ -398,7 +402,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         while ($i < $repetitions) 
         {
             $i++;
-            $mailingDateTimeStamp = strtotime('+ ' . ($i * $frequency) . ' weeks', $initMailingDate);
+            $mailingDateTimeStamp = strtotime('+ ' . ($i * $frequency) . ' weeks', strtotime($initMailingDate));
             while ($holiday->isHoliday($mailingDateTimeStamp)) 
             {
                 $mailingDateTimeStamp = $holiday->closestProductionDay($mailingDateTimeStamp);
@@ -408,8 +412,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
         $mailingDates->each(function($value,$key) use(&$mailings){
             $mailings->put($key,['mailingDate' => date('M. j', $value)]);
-        });
-            
+        }); 
         return $mailings;
     }
 
@@ -630,11 +633,8 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     }
 
     public function buildRepetitions($invoiceId){
-
         $invoiceItem = $this->getInvoiceItem();
-
         $invoiceItem->load(['product','invoice']);
-
         // Check for inproduction or ready for production repetitions
         $repeatedItems = $this->invoiceInterface->getInvoiceItems([
             'invoice_id' => $invoiceId,
@@ -643,30 +643,23 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                 'ready for production', 'in production', 'in support'
             ]
         ]);
-
         if($repeatedItems->count() > 0)
             return ; // disallow rep changes when already in production
-
         //remove previous repetitions
         $previousRepetitions = $this->invoiceInterface->getInvoiceItems([
             'invoice_id' => $invoiceId,
             'original_invoice_item_id' => '2041833',
             'orderBy' => 'date_scheduled'
         ]);
-
         $repetitionCount = $this->invoiceInterface
                                 ->getDataValue('autoCampaignRepetitions');
-
         $mailingDateTimeStamps = $this->getRepetitionDates($repetitionCount);
-
         if (count($previousRepetitions) > 0 && $invoiceItem->status != 'incomplete') 
         {
             foreach ($previousRepetitions as $repetition) {
-
                 //check if this product is still available
                 if (!is_null($invoiceItem->productId)) {
                     $productCheck = $invoice->product;
-
                     if (count($productCheck->getPricing($invoiceItem->quantity, $invoiceItem->date_submitted,
                             $invoiceItem->invoice->siteId)) > 0) {
                         //has current pricing woohoo!
@@ -678,9 +671,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                         }
                     }
                 }
-
                 $repetition->dateScheduled = array_shift($mailingDateTimeStamps);
-
                 $fields = array('name', 'shippingName', 'shippingCompany', 'shippingLine1', 'shippingLine2', 'shippingLine3', 'shippingCity', 'shippingState', 'shippingZip', 'shippingCountry');
                 foreach ($fields as $property) {
                     if (!is_null($invoiceItem->{$property})) {

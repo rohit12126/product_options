@@ -1,13 +1,17 @@
-(function($) {
+(function ($) {
 
-  jQuery.ajaxSetup({
-    cache: false
-});
+  $.ajaxSetup({
+    cache: false,
+    beforeSend: function (xhr) {
+
+      xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
+    }
+  });
 
   var ecl;
   var config;
   var ecl = {
-    _callApi: function(
+    _callApi: function (
       urn,
       method,
       data,
@@ -20,7 +24,7 @@
         method: method,
         data: data,
         cache: false,
-        headers:headers,
+        headers: headers,
         success: eval(callback), // call back function and it returns to relevent function
         error: erroCallback
       });
@@ -39,19 +43,19 @@
     apiHost: "",
     siteId: 2,
 
-    setApiKey: function(value) {
+    setApiKey: function (value) {
       if ("" != value && value) {
         config.apiKey = value;
       }
     },
 
-    setApiHost: function(value) {
+    setApiHost: function (value) {
       if ("" != value && value) {
         config.apiHost = value;
       }
     },
 
-    setSiteId: function(value) {
+    setSiteId: function (value) {
       if ("" != value && value) {
         config.siteId = value;
       }
@@ -89,7 +93,7 @@
     }
     element.text(message);
   };
-  
+
   //For Product Option
   const productOptionHandler = {
 
@@ -98,56 +102,49 @@
       var today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       $('.datepicker').datepicker({
         format: 'dd/mm/yyyy',
-        todayHighlight:true,
-        startDate: today
+        todayHighlight: true,
+        startDate: today,
+        setDate: today,
       });
     },
     handleAddressBlockChange: $form => {
       $form.on('change', '.return-address', function () {
         if (this.checked) {
           $("#addressBlock").hide();
-        }else{
+        } else {
           $("#addressBlock").show();
         }
-      });   
+      });
     },
-    selectStockoption: $form => {      
-      $form.on('change','.stock_option',function(){  
+    selectStockoption: $form => {
+      $form.on('change', '.stock_option', function () {
         var data = {};
         data.id = $(this).val();
         console.log(data);
         ecl._callApi(
-          'setStockOption', 'POST',data,function(response){
+          'setStockOption', 'POST', data, function (response) {
             $(".bindery-option-block").show();
             $(".bindery-option-block").empty().append(response);
-          } , function(response){
+          }, function (response) {
             console.log(response);
           },
-          {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-          }
         )
       });
     },
     shippedProof: $form => {
-      $form.on('change','.shipped_proof',function(){
+      $form.on('change', '.shipped_proof', function () {
         var data = {};
         var checkbox = $('[name="shipped_proof"]');
-        if (checkbox.is(':checked'))
-        {
-          data.id = '1'; 
-        }else
-        {
+        if (checkbox.is(':checked')) {
+          data.id = '1';
+        } else {
           data.id = '0';
-        }                             
-          ecl._callApi(
-          'addProof', 'POST',data,function(response){
+        }
+        ecl._callApi(
+          'addProof', 'POST', data, function (response) {
             console.log(response);
-          } , function(response){
+          }, function (response) {
             console.log(response);
-          },
-          {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
           }
         )
       });
