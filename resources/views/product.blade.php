@@ -104,7 +104,16 @@
                         <input class="form-check-input return-address" type="checkbox">
                         <label class="form-check-label">@lang('product_option.no_return_address')</label>
                     </div>
-                </div>                
+                </div>    
+                <div class="form-group">
+                    <label>@lang('product_option.production_date')</label>
+                    <div class="input-group date" >
+                        <input type="text" class="form-control datepicker">
+                        <div class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </div>
+                    </div>
+                </div>            
                 @if(!$hideAutoCampaign)
                     @include('product_options.auto_campaign')
                 @endif

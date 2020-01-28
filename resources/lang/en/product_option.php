@@ -25,6 +25,7 @@ return [
   'proof' => 'Request Proof',
   'proof_price' => '$25',
   'repeat_mailing' => 'Repeat this mailing',
+  'mailing_frequency' => 'Frequency',
   'production_date' => 'Production Date',
   'notes' => 'Notes',
   'next_btn' => 'NEXT',
