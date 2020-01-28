@@ -1,13 +1,13 @@
-<<<<<<< Updated upstream
 (function ($) {
 
-  jQuery.ajaxSetup({
-    cache: false
+  $.ajaxSetup({
+    cache: false,
+    beforeSend: function (xhr) {
+
+      xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
+    }
   });
 
-=======
-(function ($) {
->>>>>>> Stashed changes
   var ecl;
   var config;
   var ecl = {
@@ -128,9 +128,6 @@
           }, function (response) {
             console.log(response);
           },
-          {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-          }
         )
       });
     },
@@ -148,9 +145,6 @@
             console.log(response);
           }, function (response) {
             console.log(response);
-          },
-          {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
           }
         )
       });
