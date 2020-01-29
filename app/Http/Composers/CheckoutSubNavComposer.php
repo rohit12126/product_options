@@ -5,7 +5,7 @@ use App\Core\Models\OrderCore\Invoice\Item;
 use Illuminate\Contracts\View\View;
 
 
-class SupportInfoComposer
+class CheckoutSubNavComposer
 {
     protected $route = '';
     protected $navOptions = [];
@@ -14,33 +14,36 @@ class SupportInfoComposer
         
         $this->navOptions = collect([
             'designs' => function(){
-                return true;
-            },
-            'delivery' => function(){
-                $item = Item::with('designFiles')->find('2041833');
+                $item = Item::with('designFiles')->find('2184949');
+                $return  = collect([
+                    'title' => 'Design',
+                    'status' => true,
+                    'url' => '#'
+                ]);
+                if(!$item)
+                    return false;
                 foreach($item->designFiles as $designFile){
                     if($designFile->type == 'customised' || $designFile->type == 'customizable'){
-                        return [
-                            'type' => 'template'
-                        ];
+                        $return->put('type','template');
                     }
                     elseif($designFile->type == 'uploaded')
                     {
-                        return [
-                            'type' => 'uploaded'
-                        ];
+                        $return->put('type','uploaded');
                     }
                 }
-                return false;
+                return $return;
+            },
+            'delivery' => function(){
+                return collect(['title' => 'Delivery' , 'status' => true  , 'url' => '#']);
             },
             'productOptions' => function(){
-                return true;
+                return collect(['title'=>'Paper And Schedule','status'=> true , 'url' => '#']);
             },
             'cart' => function(){
-                return false;
+                return collect(['title' => 'Cart' , 'status' => false ,'url' => '#']);
             },
             'payment'=> function(){
-                return false;
+                return collect(['title' => 'Payment' , 'status' => false, 'url' => '#' ]);
             } 
         ]);
     }
@@ -54,20 +57,58 @@ class SupportInfoComposer
     {
         $currentOption = 'productOptions';
         $activeOptions = collect();
-        $inactiveOptions = collect();
         $additionalOptions = collect();
-        $this->navOptions->each(function($value,$key) use(&$activeOptions , &$inactiveOptions , &$additionalOptions,&$currentOption){
+        foreach($this->navOptions as $key => $value):
             if($key == request()->route()->getName())
                 $currentOption = $key;
             $additionalOptions->put($key,$value());
-            if($additionalOptions->get($key)){
-                $activeOptions->put($key);
+            if(
+                $additionalOptions->get($key)->get('status') 
+                && 
+                $this->verifyDependantOptions($key,$activeOptions)
+            ){
+                $activeOptions->push($key);
             }
             else{
-                $inactiveOptions->put($key);
+                $additionalOptions->put($key,$additionalOptions->get($key)->put('status',false));
             }
-        });
+        endforeach;
+        $next = $this->getNext($currentOption,$activeOptions);
+        $previous = $this->getPrevious($currentOption,$activeOptions);
+        return $view->with(compact('additionalOptions','currentOption','next','previous'));
+    }
 
-        return $view->with(compact('additionalOptions','activeOptions','inactiveOptions','currentOption'));
+    private function verifyDependantOptions($name,$activeOptions){
+        $dependentOptions = collect([
+            'designs' => [],
+            'delivery' => [
+                'designs'
+            ],
+            'productOptions' => [
+                'designs', 'delivery'
+            ],
+            'cart' => [
+                'designs', 'delivery','productOptions'
+            ],
+            'payment' => [
+                'designs', 'delivery','productOptions'
+            ]
+        ]);
+
+        if(count($dependentOptions->get($name)) == 0)
+            return true;
+        foreach($dependentOptions->get($name) as $option){
+            if(!$activeOptions->contains($option))
+                return false;
+        }
+        return true;
+    }
+
+    private function getNext($currentOption,$activeOptions){
+        return $activeOptions->get(($activeOptions->search($currentOption)+1));
+    }
+
+    private function getPrevious($currentOption,$activeOptions){
+        return $activeOptions->get(($activeOptions->search($currentOption)-1));
     }
 }
