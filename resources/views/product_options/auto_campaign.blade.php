@@ -25,9 +25,9 @@
   <div class="row">
   <div id="legal" class="col-lg-12">
     <div class="form-group">
-      <div class="form-check">
-          <input class="form-check-input agree-to-terms" type="checkbox" name="agree_to_terms" value="true" {{ ($selectAutoCampaignLegal ? 'checked="checked"' :'') }} required="">
-          <label class="form-check-label">I agree to the <a >Terms and Conditions</a></label>
+      <div class="custom-control custom-checkbox">
+          <input class="custom-control-input agree-to-terms" type="checkbox" id="agree_to_terms" name="agree_to_terms" value="true" {{ ($selectAutoCampaignLegal ? 'checked="checked"' :'') }} required="">
+          <label class="custom-control-label" for="agree_to_terms">I agree to the <a >Terms and Conditions</a></label>
       </div>
     </div>   
   </div>

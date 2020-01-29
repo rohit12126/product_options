@@ -1,0 +1,26 @@
+
+// import css releted to sprints
+@import 'sprint/common';
+@import 'sprint/upload';
+
+#loaderDiv {
+	background-color: rgb(255, 255, 255);
+	background-color: rgba(255, 255, 255, 0.95);
+	border-bottom: 1px solid #cccccc;
+	border-left: 1px solid #cccccc;
+	border-radius: 0 0 6px 6px;
+	border-right: 1px solid #cccccc;
+	padding: 7px 12px;
+	position: fixed;
+	left: 50%;
+	transform: translateX(-50%);
+	top: 0;
+	z-index: 9999;
+	box-shadow: 1px 1px 3px rgba(204, 54, 0, 0.4);
+}
+@media screen and (min-width: 980px) {
+	.ec-new .container-fluid {
+		padding-left: 40px;
+		padding-right: 40px;
+	}
+}
