@@ -70,7 +70,7 @@
                 </div>
             </div>
         </nav>
-
+        @include('partials.checkout_subnav')
         @yield('content')
     </div>
 

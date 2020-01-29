@@ -214,7 +214,7 @@ class ProductOptionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getAutoCampaign(Request $request)
+    public function autoCampaign(Request $request)
     {  
         return response()->json( $this->productOptionsInterface->setAutoCampaignData(request('repetitions')));
     }
@@ -229,24 +229,8 @@ class ProductOptionsController extends Controller
      */
     public function changeFrequency(Request $request)
     {
-        return response()->json([
-            'status' => $this->productOptionsInterface
-                                ->changeFrequency(request('frequency'))
-        ]);
-    }
-
-    /**
-     * Get the auto campaign data for mailing
-     * 
-     * @author Apoorv Vyas
-     * @param  \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getAutoCampaignMailingData(Request $request)
-    {
-        return response()->json(
-            $this->productOptionsInterface->getRepeatitionDates()
+        return response()->json( 
+            $this->productOptionsInterface->changeFrequency(request('frequency'))
         );
     }
 

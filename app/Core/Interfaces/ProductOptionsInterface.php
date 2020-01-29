@@ -19,7 +19,6 @@ interface ProductOptionsInterface
     public function setAutoCampaignData($repetitions);
     public function getAutoCampaignDataValue();
     public function changeFrequency($frequency);
-    public function getRepeatitionDates($repetitions);
     public function setAcceptAutoCampaignTerms($accept);
     public function saveNotes($notes);    
     public function addBinderyItem($bindery,$invoiceItem); 

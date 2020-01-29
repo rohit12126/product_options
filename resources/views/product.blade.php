@@ -119,7 +119,7 @@
                 <div class="form-group">
                     <label>@lang('product_option.production_date')</label>
                     <div class="input-group date" >
-                        <input type="text" class="form-control datepicker">
+                        <input type="text" class="form-control datepicker" name="production_date" value="{{$scheduled_date}}">
                         <div class="input-group-addon">
                             <span class="glyphicon glyphicon-calendar"></span>
                         </div>
@@ -130,13 +130,11 @@
                 @endif
                 <div class="form-group">
                     <label>@lang('product_option.notes')</label>
-                    <textarea class="form-control" rows="10" cols="10">
+                    <textarea class="form-control" rows="10" cols="10" name="notes">
                     </textarea> 
                 </div>
-              
-
                 <div class="form-group text-center">
-                    <button type="submit" class=" btn btn-theme-secondary text-center product-opt-next-btn">@lang('product_option.next_btn')</button>
+                    <button type="submit" disabled="disabled" class=" btn btn-theme-secondary text-center product-opt-next-btn">@lang('product_option.next_btn')</button>
                 </div>
             </form>
         </div>   

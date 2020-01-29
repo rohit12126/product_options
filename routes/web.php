@@ -25,9 +25,13 @@ Route::get('productOption', 'ProductOptionsController@index')->name('productOpti
 Route::POST('setStockOption','ProductOptionsController@setStockOption')->name('setStockOption');
 Route::get('setColorOption','ProductOptionsController@setColorOption')->name('setColorOption');
 
-Route::get('schedule_date','ProductOptionsController@setScheduledProductionDate');
+Route::post('schedule_date','ProductOptionsController@setScheduledProductionDate');
 
-Route::get('auto_campaign','ProductOptionsController@getAutoCampaign');
+Route::get('auto_campaign','ProductOptionsController@autoCampaign');
+Route::get('change_frequency','ProductOptionsController@changeFrequency')->name('change_frequency');
+Route::get('get_dates','ProductOptionsController@getAutoCampaignMailingData')->name('get_dates');
+Route::get('accept_campaign_terms','ProductOptionsController@acceptAutoCampaignTerms');
+Route::post('save_notes','ProductOptionsController@saveNotes');
 Route::get('addBinderyOption','ProductOptionsController@addBinderyOption')->name('addBinderyOption');
 Route::get('removeBinderyOption','ProductOptionsController@removeBinderyOption')->name('removeBinderyOption');
 Route::post('addProof','ProductOptionsController@addProof')->name('addProof');
