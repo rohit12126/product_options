@@ -68,13 +68,12 @@ class ProductOptionsController extends Controller
      */
     public function setStockOption(StockOptionRequest $request)
     {   
-        return response()->json([
-            'status' => 'success',
-            'data' => $this->productOptionsInterface->setStockOptionId($request->id)
-        ]);
-
-        //  $returnHTML = view('product_options.bindery_options')->render();
-        //  return response()->json(array($returnHTML));
+        // return response()->json([
+        //     'status' => 'success',
+        //     'data' => $this->productOptionsInterface->setStockOptionId($request->id)
+        // ]);         
+         $returnHTML = view('product_options.product_option_stock',$this->productOptionsInterface->setStockOptionId($request->id))->render();
+         return response()->json(array($returnHTML));      
     }
     
 
@@ -215,7 +214,7 @@ class ProductOptionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getAutoCampaign(Request $request)
+    public function autoCampaign(Request $request)
     {  
         return response()->json( $this->productOptionsInterface->setAutoCampaignData(request('repetitions')));
     }
@@ -230,24 +229,8 @@ class ProductOptionsController extends Controller
      */
     public function changeFrequency(Request $request)
     {
-        return response()->json([
-            'status' => $this->productOptionsInterface
-                                ->changeFrequency(request('frequency'))
-        ]);
-    }
-
-    /**
-     * Get the auto campaign data for mailing
-     * 
-     * @author Apoorv Vyas
-     * @param  \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getAutoCampaignMailingData(Request $request)
-    {
-        return response()->json(
-            $this->productOptionsInterface->getRepeatitionDates()
+        return response()->json( 
+            $this->productOptionsInterface->changeFrequency(request('frequency'))
         );
     }
 

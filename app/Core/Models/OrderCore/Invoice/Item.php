@@ -505,7 +505,7 @@ class Item extends BaseModel
             }
             $options['productPrint'] = $this->product->product_print_id;
         }
-        dd($this->invoice->site);
+        //dd($this->invoice->site);
         $currentProducts = $this->invoice->site->currentProducts;
 
         // If mailing option is not passed, load current (if set and valid) or load default
@@ -697,7 +697,7 @@ class Item extends BaseModel
         $found = false;
         
         foreach ($currentProducts as $availableProduct) {
-            dd($availableProduct);
+           // dd($availableProduct);
             if (
                 $availableProduct->product->product_print_id === $options['productPrint'] &&
                 $availableProduct->product->mailing_option_id === $options['mailingOption'] &&
@@ -957,7 +957,7 @@ class Item extends BaseModel
         }
         if ($this->getStockOption()->id != $stockOptionId) {
             $currentProduct = $this->product;
-            //dd($currentProduct);
+          // dd($currentProduct);
             $this->_resetProduct(
                 [
                     'productPrint' => $currentProduct->product_print_id,
@@ -1324,6 +1324,15 @@ class Item extends BaseModel
     public function scopeSubmitted($query)
     {
         return $query->whereNotIn('status', ['incomplete', 'canceled']);
+    }
+
+    public function getDataValue($name){
+        $itemData = $this->getData($name);
+
+        if($itemData)
+            return $itemData->value;
+
+        return $itemData;
     }
     
   

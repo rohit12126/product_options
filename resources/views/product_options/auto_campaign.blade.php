@@ -2,7 +2,7 @@
   <div class="col-lg-6">
     <div class="form-group">
       <label>@lang('product_option.repeat_mailing')</label>
-      <select class="form-control" name="repetitions">
+      <select class="form-control repetitions" name="repetitions">
           <option value="0">0 times</option>
           <option value="1">Send 2x  - {{$autoCampaignData['dates'][1]['mailingDate']}}</option>
           <option value="2">Send 3x  - {{$autoCampaignData['dates'][2]['mailingDate']}}</option>
@@ -26,7 +26,7 @@
   <div id="legal" class="col-lg-12">
     <div class="form-group">
       <div class="form-check">
-          <input class="form-check-input agree-to-terms" type="checkbox" name="agreeToTerms" value="true" {{ ($selectAutoCampaignLegal ? 'checked="checked"' :'') }}>
+          <input class="form-check-input agree-to-terms" type="checkbox" name="agree_to_terms" value="true" {{ ($selectAutoCampaignLegal ? 'checked="checked"' :'') }} required="">
           <label class="form-check-label">I agree to the <a >Terms and Conditions</a></label>
       </div>
     </div>   
