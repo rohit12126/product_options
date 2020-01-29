@@ -91,13 +91,12 @@
             <!-- common section end here -->
 
                 <!-- Proof option -->
-                <div class="form-group">
-                    <label></label>
-                    <div class="form-check pull-left" >
-                        <input class="form-check-input shipped_proof" name="shipped_proof" type="checkbox">
-                        <label class="form-check-label">@lang('product_option.proof')</label>
+                <div class="form-group d-flex">
+                    <div class="custom-control custom-checkbox mr-5" >
+                        <input class="custom-control-input shipped_proof" name="shipped_proof" type="checkbox" id="proof">
+                        <label class="custom-control-label" for="proof">@lang('product_option.proof')</label>
                     </div>
-                    <div class="pull-right">
+                    <div class="ml-5">
                         @lang('product_option.proof_price')
                     </div>
                 </div>
@@ -109,9 +108,9 @@
                     @include('product_options.return_address')
                 </div>
                 <div class="form-group">
-                    <div class="form-check">
-                        <input class="form-check-input return-address" type="checkbox">
-                        <label class="form-check-label">@lang('product_option.no_return_address')</label>
+                    <div class="custom-control custom-checkbox">
+                        <input class="custom-control-input return-address" type="checkbox" id="return_address">
+                        <label class="custom-control-label" for="return_address">@lang('product_option.no_return_address')</label>
                     </div>
                 </div>  
                 @endif
@@ -120,8 +119,8 @@
                     <label>@lang('product_option.production_date')</label>
                     <div class="input-group date" >
                         <input type="text" class="form-control datepicker" name="production_date" value="{{$scheduled_date}}">
-                        <div class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
+                        <div class="input-group-append">
+                            <span class="input-group-text"> <i class="fa fa-calendar"></i></span>
                         </div>
                     </div>
                 </div>            

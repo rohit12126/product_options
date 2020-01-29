@@ -52,10 +52,12 @@ class ProductOptionsController extends Controller
      */
     public function setFinishOption(Request $request)
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => $this->productOptionsInterface->setFinishOption($request->id)
-        ]);
+        // return response()->json([
+        //     'status' => 'success',
+        //     'data' => $this->productOptionsInterface->setFinishOption($request->id)
+        // ]);
+        $returnHTML = view('product_options.bindery_options',$this->productOptionsInterface->setFinishOption($request->id))->render();
+        return response()->json(array($returnHTML)); 
     }
 
     /**
@@ -68,12 +70,10 @@ class ProductOptionsController extends Controller
      */
     public function setStockOption(StockOptionRequest $request)
     {   
-        // return response()->json([
-        //     'status' => 'success',
-        //     'data' => $this->productOptionsInterface->setStockOptionId($request->id)
-        // ]);         
-         $returnHTML = view('product_options.product_option_stock',$this->productOptionsInterface->setStockOptionId($request->id))->render();
-         return response()->json(array($returnHTML));      
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->productOptionsInterface->setStockOptionId($request->id)
+        ]);                
     }
     
 
@@ -86,7 +86,7 @@ class ProductOptionsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function setColorOption(ColorOptionRequest $request)
-    {
+    { 
         return response()->json([
             'status' => 'success',
             'data' => $this->productOptionsInterface->setColorOptionId($request->id)

@@ -11,14 +11,15 @@
     },
     "devDependencies": {
         "axios": "^0.19",
-        "bootstrap-sass": "^3.3.7",
         "cross-env": "^5.1",
-        "jquery": "^3.2",
+        "jquery": "^3.4.1",
         "laravel-mix": "^1.0",
         "lodash": "^4.17.4",
+        "popper.js": "^1.16.1",
         "vue": "^2.5.7"
     },
     "dependencies": {
+        "bootstrap": "^4.4.1",
         "bootstrap-datepicker": "^1.9.0",
         "moment": "^2.24.0"
     }

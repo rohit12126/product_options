@@ -135,8 +135,8 @@ const moment = require("moment");
         ecl._callApi(
           'setFinishOption', 'POST', data, function (response) {
             console.log(response);
-            $(".bindery-option-block").show();
-            $(".finish_option_section").empty().append(response);
+            $(".bindery-option-block").show();           
+            $(".bindery-option-block").empty().append(response);
           }, function (response) {
             console.log(response);
           },
@@ -150,8 +150,7 @@ const moment = require("moment");
         console.log(data);
         ecl._callApi(
           'setStockOption', 'POST', data, function (response) {
-            console.log(response);
-            $(".stock_option_section").empty().append(response);
+            console.log(response);          
           }, function (response) {
             console.log(response);
           },
@@ -187,8 +186,7 @@ const moment = require("moment");
         data.id = $(this).val();
         ecl._callApi(
           'setColorOption', 'POST', data, function (response) {
-            console.log(response);
-            $(".stock_color_section").empty().append(response);
+            console.log(response);           
           }, function (response) {
             console.log(response);
           }
