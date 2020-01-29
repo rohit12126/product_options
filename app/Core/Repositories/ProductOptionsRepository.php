@@ -299,7 +299,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         {
             $invoiceItem = $this->getInvoiceItem();
             $invoiceItem->setDataValue('autoCampaignRepetitions', $repetitions);
-            if (0 == $repetitionCount) {
+            if (0 == $repetitions) {
                 // Reset to weekly frequency.
                 // _setDefaultAutoCampaignFrequency only works if frequency has not been previously set.
                 $invoiceItem->setDataValue('autoCampaignFrequency', 1);
@@ -321,7 +321,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
                 $invoiceItem->promotionAmount = 0.00;
                 $invoiceItem->save();
             }
-            $invoiceItem->buildRepetitions();
+            //$this->buildRepetitions();
             if (isset($nonAutoCampaignPromoId)) {
                 $invoiceItem->setPromotion(
                     $this->promotionModel->find($nonAutoCampaignPromoId)
@@ -342,9 +342,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function getPromotionData($promotionCode = ''){
         if(empty($promotionCode))
             $promotionCode              = $this->getAutoCampaignCode();
-        $promotion                  = $this->getPromotionByCode($promotionCode);
+        $promotion   = $this->promotionModel->where('code',$promotionCode)->first();;
         return compact('promotionCode','promotion');
     }
+
 
     public function getAutoCampaignDataValue()
     {
@@ -365,11 +366,11 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     {
         $invoiceItem = $this->getInvoiceItem();
         $invoiceItem->setDataValue('autoCampaignFrequency',$frequency);
-        $invoiceItem->buildRepetitions();
-        return true;
+        //$this->buildRepetitions();
+        return $this->getRepeatitionDates(4);
     }
 
-    public function getRepeatitionDates($repetitions)
+    protected function getRepeatitionDates($repetitions)
     {
         $invoiceItem = $this->getInvoiceItem();
         $mailingDates = collect();
@@ -422,18 +423,21 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
 
     public function setScheduledDate($date)
     {
+        $dateScheduled = Carbon::createFromFormat('m-d-Y',$date);
         if (!is_null($date)) {
             $invoiceItem =  $this->getInvoiceItem();
-            $invoiceItem->date_scheduled = Carbon::parse($date);
+            $today = Carbon::now();
+            if($today->eq($date)){
+                $dateScheduled = NULL;
+            }
+            $invoiceItem->date_scheduled = $dateScheduled;
             $invoiceItem->save();
+            
         }
-
-        $today = Carbon::now()->format('m-d-Y');
-        $dateScheduled = Carbon::parse($invoiceItem->date_scheduled)->format('m-d-Y');
-        if ($invoiceItem->date_scheduled == $today && is_null($invoiceItem->date_submitted)) {
-            $invoiceItem->date_scheduled = null;
-            $invoiceItem->save();
-        }
+        if($dateScheduled == NULL)
+            $dateScheduled = $today->format('m-d-Y');
+        else
+            $dateScheduled = $dateScheduled->format('m-d-Y');
 
         return $dateScheduled;
     }
@@ -635,13 +639,12 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }
     }
 
-    public function buildRepetitions($invoiceId){
-        $invoiceItem = $this->getInvoiceItem();
-        $invoiceItem->load(['product','invoice']);
+    public function buildRepetitions(){
+        $invoiceItem = $this->getInvoiceItem(['relations'=>['product','invoice']]);
         // Check for inproduction or ready for production repetitions
         $repeatedItems = $this->invoiceInterface->getInvoiceItems([
-            'invoice_id' => $invoiceId,
-            'original_invoice_item_id' => '2041833',
+            'invoice_id' => $invoiceItem->invoice_id,
+            'original_invoice_item_id' => $invoiceItem->id,
             'status' => [
                 'ready for production', 'in production', 'in support'
             ]
@@ -816,6 +819,10 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         $invoiceItem = $this->getInvoiceItem();
         $data->put('allBinderyOption',$this->binderyOptionModel->get()->groupBy('type'));
         $data->put('binderyOptions',$this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id));
+        $dateScheduled = $invoiceItem->date_scheduled;
+        if(!$dateScheduled)
+            $dateScheduled = Carbon::now();
+        $data->put('scheduled_date',$dateScheduled);
         $data = $data->merge($this->getAutoCampaignData());
         //dd($data);
         return $data;
