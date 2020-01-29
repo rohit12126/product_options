@@ -101,7 +101,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     public function getInvoiceItem($new =[])
     {   //2041833 ,1099260
         $params =  collect([
-            'id' => '1098675',
+            'id' => '1099260',
             'relations' => 'invoice'
         ]);        
         $params = $params->map(function($value,$key) use($new){
@@ -213,15 +213,21 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
         }        
 
         $invoiceItem->setDataValue('hasSelectedFinishOption', 1);
-        return true;
-            
+       // return true;
+
+        $data = collect();
+        $site = $this->siteInterface->getSite();       
+        $data->put('allBinderyOption',$this->binderyOptionModel->get()->groupBy('type'));
+        $data->put('binderyOptions',$this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id));
+        $data = $data->merge($this->getFinishOptions());            
+        return $data;   
     }
 
 
     public function getColorOptions()
     {
         $site = $this->siteInterface->getSite();
-        $invoiceItem = $this->getInvoiceItem([ 'relations' => 'product' ]);
+        $invoiceItem = $this->getInvoiceItem([ 'relations' => 'product' ]);      
         $colorOptions = collect();
         $colorOptionQuery = $this->colorOptionModel
         ->join('product as p','color_option.id','=','p.color_option_id')
@@ -241,7 +247,7 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     }
 
     public function getAutoCampaignCode(){
-        $site = $this->siteInterface->getSite();
+        $site = $this->siteInterface->getSite();        
         $site->load('parent');
          if (!is_null($code = $site->getData('autoCampaignCode')->value) && !empty($code)) {
             return $code;
@@ -462,19 +468,14 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     }
 
     public function setStockOptionId($stockOptionId)
-    {    
-        $site = $this->siteInterface->getSite(); 
+    {           
         $invoiceItem = $this->getInvoiceItem(['relations'=>'product']);   
         if(!empty($stockOptionId) && !empty($invoiceItem))
         {
-          // $stockOption = $invoiceItem->setStockOptionId($stockOptionId);        
-            $data = collect();
-            $data = $data->merge($this->getFinishOptions());
-            $data = $data->merge($this->getStockOption());
-            $data = $data->merge($this->getColorOptions());
-            $data->put('allBinderyOption',$this->binderyOptionModel->get()->groupBy('type'));
-            $data->put('binderyOptions',$this->jobCalculatorInterface->getBinderyOptions($invoiceItem->product_id,$site->id));              
-            return $data;
+            $stockOption = $invoiceItem->setStockOptionId($stockOptionId);
+            if($invoiceItem->setStockOptionId($stockOptionId)){
+                return true;
+            }             
         }
     }
 
@@ -482,10 +483,11 @@ class ProductOptionsRepository extends BaseRepository implements ProductOptionsI
     {
         $invoiceItem = $this->getInvoiceItem();
         if(!empty($colorId) && !empty($invoiceItem))
-        {
-           $colorOption = $invoiceItem->setColorOptionId($colorId);         
-           return true; 
-        }        
+        {            
+           if($invoiceItem->setColorOptionId($colorId)){
+                return true;
+           }    
+        }                
     }
   
     public function addProofAction($proofId)
